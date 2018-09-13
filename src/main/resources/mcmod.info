@@ -1,14 +1,14 @@
 [
 {
-  "modid": "examplemod",
-  "name": "Example Mod",
-  "description": "Example placeholder mod.",
+  "modid": "morechids",
+  "name": "Morechids",
+  "description": "Unlimited customizable Orechid variants for botanical progression",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",
-  "authorList": ["ExampleDude"],
-  "credits": "The Forge and FML guys, for making this example",
+  "authorList": ["Taw"],
+  "credits": "SuperIronBob came up with the idea, and, most importantly, the name.",
   "logoFile": "",
   "screenshots": [],
   "dependencies": []
