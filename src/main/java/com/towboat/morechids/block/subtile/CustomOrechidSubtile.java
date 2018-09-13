@@ -160,7 +160,7 @@ public class CustomOrechidSubtile extends SubTileFunctional {
 
     @Override
     public RadiusDescriptor getRadius() {
-        return new RadiusDescriptor.Square(toBlockPos(), RANGE);
+        return new RadiusDescriptor.Square(toBlockPos(), getRange());
     }
 
     @Override
