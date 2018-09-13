@@ -1,9 +1,7 @@
 package com.towboat.morechids;
 
 import com.towboat.morechids.proxy.CommonProxy;
-import net.minecraft.init.Blocks;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -23,7 +21,7 @@ public class Morechids {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        System.out.println(NAME + " is loading!");
+       System.out.println(NAME + " is loading!");
     }
 
     @Mod.EventHandler
