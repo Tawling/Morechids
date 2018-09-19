@@ -1,4 +1,4 @@
-package com.towboat.morechids.core;
+package com.towboat.morechids.tweaker;
 
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.item.IIngredient;
@@ -29,11 +29,12 @@ public class MorechidDefinition {
     }
 
     @ZenMethod
-    public void addConversion(IIngredient input, IIngredient output, double weight) {
+    public void addRecipe(IIngredient input, IIngredient output, double weight) {
         conversions.add(new Conversion(input, output, weight));
     }
 
-    public void removeConversion(IIngredient input, IIngredient output) {
+    @ZenMethod
+    public void removeRecipe(IIngredient input, IIngredient output) {
         conversions.add(new Conversion(input, output, 0));
     }
 

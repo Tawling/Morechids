@@ -24,14 +24,21 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.WeightedRandom;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.translation.I18n;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 import vazkii.botania.api.BotaniaAPI;
 import vazkii.botania.api.lexicon.LexiconEntry;
 import vazkii.botania.api.subtile.RadiusDescriptor;
 import vazkii.botania.api.subtile.SubTileFunctional;
+import vazkii.botania.api.subtile.signature.SubTileSignature;
 import vazkii.botania.common.Botania;
 import vazkii.botania.common.core.handler.ConfigHandler;
 import vazkii.botania.common.core.handler.ModSounds;
@@ -41,7 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class CustomOrechidSubtile extends SubTileFunctional {
+public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSignature {
 
     private static final int COST = 17500;
     private static final int COST_GOG = 700;
@@ -49,6 +56,14 @@ public class CustomOrechidSubtile extends SubTileFunctional {
     private static final int DELAY_GOG = 2;
     private static final int RANGE = 5;
     private static final int RANGE_Y = 3;
+
+    public String identifier = "unknown";
+
+    @Override
+    public final void readFromPacketNBT(NBTTagCompound cmp) {
+        if(cmp.hasKey(TAG_TYPE))
+            identifier = cmp.getString(TAG_TYPE);
+    }
 
     @Override
     public void onUpdate() {
@@ -181,6 +196,25 @@ public class CustomOrechidSubtile extends SubTileFunctional {
     @Override
     public LexiconEntry getEntry() {
         return LexiconData.orechid;
+    }
+
+    public String getIdentifier() {
+        return identifier;
+    }
+    @Override
+    public String getUnlocalizedNameForStack(ItemStack itemStack) {
+        return "tile.morechids:morechid." + getIdentifier();
+    }
+
+    @Override
+    public String getUnlocalizedLoreTextForStack(ItemStack itemStack) {
+        return "tile.morechids:morechid." + getIdentifier() + ".reference";
+    }
+
+    @SideOnly(Side.CLIENT)
+    @Override
+    public void addTooltip(ItemStack stack, World world, List<String> tooltip) {
+        tooltip.add(TextFormatting.BLUE + I18n.translateToLocal("botania.flowerType.functional"));
     }
 
     private static class StringRandomItem extends WeightedRandom.Item {

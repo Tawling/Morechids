@@ -33,6 +33,7 @@ public class Morechids {
 
         BotaniaAPI.registerSubTile("morechid", subclassedCustomOrechid);
         BotaniaAPI.addSubTileToCreativeMenu("morechid");
+
         BotaniaAPIClient.registerSubtileModel(subclassedCustomOrechid, new ModelResourceLocation("botania:" + LibBlockNames.SUBTILE_ORECHID));
 
         Class<? extends CustomOrechidSubtile> subclassedCustomOrechid2 = MorechidClassBuilder.generateMorechid("subclassedCustomOrechid2");
@@ -40,6 +41,7 @@ public class Morechids {
         BotaniaAPI.registerSubTile("morechid2", subclassedCustomOrechid2);
         BotaniaAPI.addSubTileToCreativeMenu("morechid2");
         BotaniaAPIClient.registerSubtileModel(subclassedCustomOrechid2, new ModelResourceLocation("botania:" + LibBlockNames.SUBTILE_ORECHID_IGNEM));
+
     }
 
     @Mod.EventHandler

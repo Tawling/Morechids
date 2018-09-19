@@ -1,4 +1,4 @@
-package com.towboat.morechids.core;
+package com.towboat.morechids.tweaker;
 
 import crafttweaker.api.item.IIngredient;
 import crafttweaker.api.item.IItemStack;
