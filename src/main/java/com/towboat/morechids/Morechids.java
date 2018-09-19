@@ -2,6 +2,7 @@ package com.towboat.morechids;
 
 import com.towboat.morechids.block.subtile.CustomOrechidSubtile;
 import com.towboat.morechids.proxy.CommonProxy;
+import com.towboat.morechids.asm.MorechidClassBuilder;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -27,9 +28,18 @@ public class Morechids {
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         System.out.println(NAME + " is loading!");
-        BotaniaAPI.registerSubTile("morechid", CustomOrechidSubtile.class);
+
+        Class<? extends CustomOrechidSubtile> subclassedCustomOrechid = MorechidClassBuilder.generateMorechid("subclassedCustomOrechid");
+
+        BotaniaAPI.registerSubTile("morechid", subclassedCustomOrechid);
         BotaniaAPI.addSubTileToCreativeMenu("morechid");
-        BotaniaAPIClient.registerSubtileModel(CustomOrechidSubtile.class, new ModelResourceLocation("botania:" + LibBlockNames.SUBTILE_ORECHID));
+        BotaniaAPIClient.registerSubtileModel(subclassedCustomOrechid, new ModelResourceLocation("botania:" + LibBlockNames.SUBTILE_ORECHID));
+
+        Class<? extends CustomOrechidSubtile> subclassedCustomOrechid2 = MorechidClassBuilder.generateMorechid("subclassedCustomOrechid2");
+
+        BotaniaAPI.registerSubTile("morechid2", subclassedCustomOrechid2);
+        BotaniaAPI.addSubTileToCreativeMenu("morechid2");
+        BotaniaAPIClient.registerSubtileModel(subclassedCustomOrechid2, new ModelResourceLocation("botania:" + LibBlockNames.SUBTILE_ORECHID_IGNEM));
     }
 
     @Mod.EventHandler
