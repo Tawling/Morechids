@@ -1,7 +1,10 @@
 package com.towboat.morechids.tweaker;
 
+import crafttweaker.annotations.ZenRegister;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import stanhebben.zenscript.annotations.ZenClass;
+import stanhebben.zenscript.annotations.ZenMethod;
 
 import java.util.List;
 import java.util.Map;
@@ -13,31 +16,20 @@ import java.util.Map;
  * Date:    9/13/2018
  */
 
+@ZenClass("mods.morechids")
+@ZenRegister
 public class MorechidRegistry {
 
-    public static final MorechidRegistry INSTANCE = new MorechidRegistry();
+    static Map<String, MorechidDefinition> morechids;
+    static Map<String, ObscureDaisyDefinition> obscureDaisies;
 
-    Map<String, MorechidDefinition> morechids;
-    Map<String, ObscureDaisyDefinition> obscureDaisies;
-
-    private MorechidRegistry(){}
-
-    public void registerFlower(String identifier) {
-
+    @ZenMethod
+    public static void createMorechid(String identifier) {
+        MorechidDefinition def = new MorechidDefinition(identifier);
     }
 
-    public void getFlower(String identifier) {
+    public static void getFlower(String identifier) {
 
-    }
-
-    class MorechidDefinition {
-        String identifier;
-        int manaCost;
-        int delay;
-        int range;
-        int rangeY;
-        int particleColor;
-        List<MorechidRecipe> recipes;
     }
 
     class ObscureDaisyDefinition {

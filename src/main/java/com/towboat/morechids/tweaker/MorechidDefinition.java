@@ -16,6 +16,13 @@ import java.util.List;
 @ZenRegister
 public class MorechidDefinition {
     private String identifier;
+    private int manaCost;
+    private int delay;
+    private int range;
+    private int rangeY;
+    private int particleColor;
+
+    private Class morechidClass;
 
     private List<Conversion> conversions = new ArrayList<>();
 
