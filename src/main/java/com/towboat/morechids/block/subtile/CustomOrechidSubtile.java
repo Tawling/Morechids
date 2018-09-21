@@ -17,6 +17,10 @@
 package com.towboat.morechids.block.subtile;
 
 import com.google.common.base.Predicate;
+import com.towboat.morechids.tweaker.BlockOutput;
+import com.towboat.morechids.tweaker.BlockOutputMapping;
+import com.towboat.morechids.tweaker.MorechidDefinition;
+import com.towboat.morechids.tweaker.MorechidRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStone;
 import net.minecraft.block.state.IBlockState;
@@ -57,12 +61,13 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     private static final int RANGE = 5;
     private static final int RANGE_Y = 3;
 
-    public String identifier = "unknown";
+    private MorechidDefinition definition;
 
-    @Override
-    public final void readFromPacketNBT(NBTTagCompound cmp) {
-        if(cmp.hasKey(TAG_TYPE))
-            identifier = cmp.getString(TAG_TYPE);
+    public CustomOrechidSubtile() {
+        super();
+        this.definition = MorechidRegistry.morechids.get(getClass().getSimpleName().split("_",2)[1]);
+        System.out.println("Class: " + getClass().getName());
+        System.out.println(this.definition);
     }
 
     @Override
@@ -76,7 +81,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
         if(mana >= cost && ticksExisted % getDelay() == 0) {
             BlockPos coords = getCoordsToPut();
             if(coords != null) {
-                ItemStack stack = getOreToPut(supertile.getWorld().getBlockState(coords).getBlock());
+                ItemStack stack = getOreToPut(supertile.getWorld().getBlockState(coords));
                 if(!stack.isEmpty()) {
                     Block block = Block.getBlockFromItem(stack.getItem());
                     int meta = stack.getItemDamage();
@@ -92,40 +97,24 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
         }
     }
 
-    public ItemStack getOreToPut(Block block) {
-        List<WeightedRandom.Item> values = new ArrayList<>();
-        Map<String, Integer> map = getOreMap(block);
-        for(String s : map.keySet())
-            values.add(new StringRandomItem(map.get(s), s));
-
-        if (values.isEmpty()) {
-            return null;
+    public ItemStack getOreToPut(IBlockState block) {
+        BlockOutputMapping mapping = definition.recipes.get(block);
+        if (mapping == null) {
+            mapping = definition.recipes.get(block.getBlock());
+            if (mapping == null) {
+                return ItemStack.EMPTY;
+            }
         }
 
-        String ore = ((StringRandomItem) WeightedRandom.getRandomItem(supertile.getWorld().rand, values)).s;
-
-        List<ItemStack> ores = OreDictionary.getOres(ore);
-
-        for(ItemStack stack : ores) {
-            Item item = stack.getItem();
-            String clname = item.getClass().getName();
-
-            // This poem is dedicated to Greg
-            //
-            // Greg.
-            // I get what you do when
-            // others say it's a grind.
-            // But take your TE ores
-            // and stick them in your behind.
-            if(clname.startsWith("gregtech") || clname.startsWith("gregapi"))
-                continue;
-            if(!(item instanceof ItemBlock))
-                continue;
-
-            return stack;
+        IBlockState state = mapping.selectBlock();
+        if (state == null) {
+            return ItemStack.EMPTY;
         }
-
-        return getOreToPut(block);
+        Block b = state.getBlock();
+        if (b == null) {
+            return ItemStack.EMPTY;
+        }
+        return new ItemStack(state.getBlock());
     }
 
     private BlockPos getCoordsToPut() {
@@ -136,7 +125,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
 
         for(BlockPos pos : BlockPos.getAllInBox(getPos().add(-rangeX, -rangeY, -rangeX), getPos().add(rangeX, rangeY, rangeX))) {
             IBlockState state = supertile.getWorld().getBlockState(pos);
-            if(state.getBlock().isReplaceableOreGen(state, supertile.getWorld(), pos, getReplaceMatcher()))
+            if(definition.matches(supertile.getWorld(), pos, this, state))
                 possibleCoords.add(pos);
         }
 
@@ -199,7 +188,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     }
 
     public String getIdentifier() {
-        return identifier;
+        return definition.getIdentifier();
     }
     @Override
     public String getUnlocalizedNameForStack(ItemStack itemStack) {

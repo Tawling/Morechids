@@ -1,11 +1,18 @@
 package com.towboat.morechids.tweaker;
 
+import com.towboat.morechids.asm.MorechidClassBuilder;
+import com.towboat.morechids.block.subtile.CustomOrechidSubtile;
 import crafttweaker.annotations.ZenRegister;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
+import vazkii.botania.api.BotaniaAPI;
+import vazkii.botania.api.BotaniaAPIClient;
+import vazkii.botania.common.lib.LibBlockNames;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,20 +23,37 @@ import java.util.Map;
  * Date:    9/13/2018
  */
 
-@ZenClass("mods.morechids")
+@ZenClass("mods.morechids.Registry")
 @ZenRegister
 public class MorechidRegistry {
 
-    static Map<String, MorechidDefinition> morechids;
-    static Map<String, ObscureDaisyDefinition> obscureDaisies;
+    public static final Map<String, MorechidDefinition> morechids = new HashMap<>();
+    public static final Map<String, ObscureDaisyDefinition> obscureDaisies = new HashMap<>();
 
     @ZenMethod
-    public static void createMorechid(String identifier) {
+    public static MorechidDefinition createMorechid(String identifier) {
+
+        System.out.println("Registering morechid: " + identifier);
+
         MorechidDefinition def = new MorechidDefinition(identifier);
+        morechids.put(identifier, def);
+
+        Class<? extends CustomOrechidSubtile> flowerClass = MorechidClassBuilder.generateMorechid(def.getIdentifier());
+
+        def.setMorechidClass(flowerClass);
+
+        BotaniaAPI.registerSubTile(def.getIdentifier(), flowerClass);
+        BotaniaAPI.addSubTileToCreativeMenu(def.getIdentifier());
+
+        BotaniaAPIClient.registerSubtileModel(flowerClass, new ModelResourceLocation("botania:" + LibBlockNames.SUBTILE_ORECHID));
+        System.out.println("Loaded flower: " + def.getIdentifier());
+
+        return def;
     }
 
-    public static void getFlower(String identifier) {
-
+    @ZenMethod
+    public static MorechidDefinition getFlower(String identifier) {
+        return morechids.get(identifier);
     }
 
     class ObscureDaisyDefinition {
