@@ -3,9 +3,7 @@ package com.towboat.morechids.tweaker;
 import com.blamejared.mtlib.helpers.InputHelper;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.item.IIngredient;
-import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.liquid.ILiquidStack;
-import crafttweaker.mc1120.item.MCItemStack;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
@@ -16,20 +14,17 @@ import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
 import vazkii.botania.api.subtile.SubTileEntity;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 
 @ZenClass("mods.morechids.MorechidDefinition")
 @ZenRegister
 public class MorechidDefinition {
     public String identifier;
-    public int manaCost;
-    public int delay;
-    public int range;
-    public int rangeY;
-    public int particleColor;
+    public int manaCost = 17500;
+    public int delay = 100;
+    public int range = 5;
+    public int rangeY = 3;
+    public int particleColor = 0xFFFFFF;
 
     public HashMap<Object, BlockOutputMapping> recipes = new HashMap<>();
 
