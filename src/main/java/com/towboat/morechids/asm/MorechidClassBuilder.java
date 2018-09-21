@@ -38,7 +38,7 @@ public class MorechidClassBuilder {
         Type baseMorechidType = Type.getType(CustomOrechidSubtile.class);
 
         ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        classWriter.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER, name, null, baseMorechidType.getInternalName(), null);
+        classWriter.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER, "Morechid_" + name, null, baseMorechidType.getInternalName(), null);
 
         // generate constructor
         Method customOrechidConstructor = Method.getMethod("void <init> ()");
@@ -50,6 +50,6 @@ public class MorechidClassBuilder {
 
         classWriter.visitEnd();
 
-        return loadClass(name, classWriter.toByteArray());
+        return loadClass("Morechid_"+name, classWriter.toByteArray());
     }
 }

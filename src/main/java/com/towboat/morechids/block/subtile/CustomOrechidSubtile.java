@@ -16,39 +16,38 @@
  */
 package com.towboat.morechids.block.subtile;
 
-import com.google.common.base.Predicate;
+import com.towboat.morechids.tweaker.BlockOutputMapping;
+import com.towboat.morechids.tweaker.MorechidDefinition;
+import com.towboat.morechids.tweaker.MorechidRegistry;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockStone;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.SoundCategory;
-import net.minecraft.util.WeightedRandom;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.oredict.OreDictionary;
-import vazkii.botania.api.BotaniaAPI;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.translation.I18n;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import vazkii.botania.api.lexicon.LexiconEntry;
 import vazkii.botania.api.subtile.RadiusDescriptor;
 import vazkii.botania.api.subtile.SubTileFunctional;
-import vazkii.botania.common.Botania;
+import vazkii.botania.api.subtile.signature.SubTileSignature;
 import vazkii.botania.common.core.handler.ConfigHandler;
 import vazkii.botania.common.core.handler.ModSounds;
 import vazkii.botania.common.lexicon.LexiconData;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-public class CustomOrechidSubtile extends SubTileFunctional {
+public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSignature {
 
-    private static final int COST = 17500;
-    private static final int COST_GOG = 700;
-    private static final int DELAY = 100;
-    private static final int DELAY_GOG = 2;
-    private static final int RANGE = 5;
-    private static final int RANGE_Y = 3;
+    private MorechidDefinition definition;
+
+    public CustomOrechidSubtile() {
+        super();
+        this.definition = MorechidRegistry.morechids.get(getClass().getSimpleName().split("_",2)[1]);
+    }
 
     @Override
     public void onUpdate() {
@@ -61,7 +60,7 @@ public class CustomOrechidSubtile extends SubTileFunctional {
         if(mana >= cost && ticksExisted % getDelay() == 0) {
             BlockPos coords = getCoordsToPut();
             if(coords != null) {
-                ItemStack stack = getOreToPut(supertile.getWorld().getBlockState(coords).getBlock());
+                ItemStack stack = getOreToPut(supertile.getWorld().getBlockState(coords));
                 if(!stack.isEmpty()) {
                     Block block = Block.getBlockFromItem(stack.getItem());
                     int meta = stack.getItemDamage();
@@ -77,40 +76,24 @@ public class CustomOrechidSubtile extends SubTileFunctional {
         }
     }
 
-    public ItemStack getOreToPut(Block block) {
-        List<WeightedRandom.Item> values = new ArrayList<>();
-        Map<String, Integer> map = getOreMap(block);
-        for(String s : map.keySet())
-            values.add(new StringRandomItem(map.get(s), s));
-
-        if (values.isEmpty()) {
-            return null;
+    public ItemStack getOreToPut(IBlockState block) {
+        BlockOutputMapping mapping = definition.recipes.get(block);
+        if (mapping == null) {
+            mapping = definition.recipes.get(block.getBlock());
+            if (mapping == null) {
+                return ItemStack.EMPTY;
+            }
         }
 
-        String ore = ((StringRandomItem) WeightedRandom.getRandomItem(supertile.getWorld().rand, values)).s;
-
-        List<ItemStack> ores = OreDictionary.getOres(ore);
-
-        for(ItemStack stack : ores) {
-            Item item = stack.getItem();
-            String clname = item.getClass().getName();
-
-            // This poem is dedicated to Greg
-            //
-            // Greg.
-            // I get what you do when
-            // others say it's a grind.
-            // But take your TE ores
-            // and stick them in your behind.
-            if(clname.startsWith("gregtech") || clname.startsWith("gregapi"))
-                continue;
-            if(!(item instanceof ItemBlock))
-                continue;
-
-            return stack;
+        IBlockState state = mapping.selectBlock();
+        if (state == null) {
+            return ItemStack.EMPTY;
         }
-
-        return getOreToPut(block);
+        Block b = state.getBlock();
+        if (b == null) {
+            return ItemStack.EMPTY;
+        }
+        return new ItemStack(state.getBlock());
     }
 
     private BlockPos getCoordsToPut() {
@@ -121,7 +104,7 @@ public class CustomOrechidSubtile extends SubTileFunctional {
 
         for(BlockPos pos : BlockPos.getAllInBox(getPos().add(-rangeX, -rangeY, -rangeX), getPos().add(rangeX, rangeY, rangeX))) {
             IBlockState state = supertile.getWorld().getBlockState(pos);
-            if(state.getBlock().isReplaceableOreGen(state, supertile.getWorld(), pos, getReplaceMatcher()))
+            if(definition.matches(supertile.getWorld(), pos, this, state))
                 possibleCoords.add(pos);
         }
 
@@ -134,28 +117,20 @@ public class CustomOrechidSubtile extends SubTileFunctional {
         return true;
     }
 
-    public Map<String, Integer> getOreMap(Block block) {
-        return BotaniaAPI.oreWeights;
-    }
-
-    public Predicate<IBlockState> getReplaceMatcher() {
-        return state -> state.getBlock() == Blocks.STONE && state.getValue(BlockStone.VARIANT) == BlockStone.EnumType.STONE;
-    }
-
     public int getCost() {
-        return Botania.gardenOfGlassLoaded ? COST_GOG : COST;
+        return definition.manaCost;
     }
 
     public int getDelay() {
-        return Botania.gardenOfGlassLoaded ? DELAY_GOG : DELAY;
+        return definition.delay;
     }
 
     public int getRange() {
-        return RANGE;
+        return definition.range;
     }
 
     public int getRangeY() {
-        return RANGE_Y;
+        return definition.rangeY;
     }
 
     @Override
@@ -170,7 +145,7 @@ public class CustomOrechidSubtile extends SubTileFunctional {
 
     @Override
     public int getColor() {
-        return 0x818181;
+        return definition.particleColor;
     }
 
     @Override
@@ -183,14 +158,25 @@ public class CustomOrechidSubtile extends SubTileFunctional {
         return LexiconData.orechid;
     }
 
-    private static class StringRandomItem extends WeightedRandom.Item {
+    public String getIdentifier() {
+        return definition.getIdentifier();
+    }
+    @Override
+    public String getUnlocalizedNameForStack(ItemStack itemStack) {
+        return "morechids:morechid." + getIdentifier();
+    }
 
-        public final String s;
+    @Override
+    public String getUnlocalizedLoreTextForStack(ItemStack itemStack) {
+        return "morechids:morechid." + getIdentifier() + ".reference";
+    }
 
-        public StringRandomItem(int par1, String s) {
-            super(par1);
-            this.s = s;
-        }
-
+    @SideOnly(Side.CLIENT)
+    @Override
+    public void addTooltip(ItemStack stack, World world, List<String> tooltip) {
+        if(getCost() == 0)
+            tooltip.add(TextFormatting.BLUE + I18n.translateToLocal("botania.flowerType.special"));
+        else
+            tooltip.add(TextFormatting.BLUE + I18n.translateToLocal("botania.flowerType.functional"));
     }
 }
