@@ -21,10 +21,12 @@ import java.util.HashMap;
 public class MorechidDefinition {
     public String identifier;
     public int manaCost = 17500;
+    public int timeCost = 0;
     public int delay = 100;
     public int range = 5;
     public int rangeY = 3;
-    public int particleColor = 0xFFFFFF;
+    public int particleColor = 0x818181;
+    public boolean playSound = true;
 
     public HashMap<Object, BlockOutputMapping> recipes = new HashMap<>();
 
@@ -47,7 +49,7 @@ public class MorechidDefinition {
         return morechidClass;
     }
 
-    public boolean matches(World world, BlockPos pos, SubTileEntity flower, IBlockState state) {
+    public boolean matches(IBlockState state) {
         return recipes.containsKey(state) || recipes.containsKey(state.getBlock());
     }
 

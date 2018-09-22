@@ -26,7 +26,6 @@ public class MorechidRegistry {
 
     public static final Map<String, MorechidDefinition> morechids = new HashMap<>();
 
-    @ZenMethod
     public static MorechidDefinition createMorechid(String identifier) {
 
         System.out.println("Registering morechid: " + identifier);
@@ -41,11 +40,11 @@ public class MorechidRegistry {
         BotaniaAPI.registerSubTile(def.getIdentifier(), flowerClass);
         BotaniaAPI.addSubTileToCreativeMenu(def.getIdentifier());
 
-        BotaniaAPIClient.registerSubtileModel(flowerClass, new ModelResourceLocation("botania:" + LibBlockNames.SUBTILE_ORECHID));
-        System.out.println("Loaded flower: " + def.getIdentifier());
-
+        BotaniaAPIClient.registerSubtileModel(flowerClass, new ModelResourceLocation("morechids:" + identifier));
         return def;
     }
+
+
 
     @ZenMethod
     public static MorechidDefinition getFlower(String identifier) {

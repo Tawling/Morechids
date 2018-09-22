@@ -11,6 +11,6 @@
   "credits": "SuperIronBob came up with the idea, and, most importantly, the name.",
   "logoFile": "",
   "screenshots": [],
-  "dependencies": []
+  "dependencies": ["botania","crafttweaker","mtlib"]
 }
 ]

@@ -1,6 +1,8 @@
 package com.towboat.morechids.asm;
 
 import com.towboat.morechids.block.subtile.CustomOrechidSubtile;
+import com.towboat.morechids.tweaker.MorechidDefinition;
+import com.towboat.morechids.tweaker.MorechidRegistry;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;

@@ -67,7 +67,9 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
                     supertile.getWorld().setBlockState(coords, block.getStateFromMeta(meta), 1 | 2);
                     if(ConfigHandler.blockBreakParticles)
                         supertile.getWorld().playEvent(2001, coords, Block.getIdFromBlock(block) + (meta << 12));
-                    supertile.getWorld().playSound(null, supertile.getPos(), ModSounds.orechid, SoundCategory.BLOCKS, 2F, 1F);
+                    if (definition.playSound) {
+                        supertile.getWorld().playSound(null, supertile.getPos(), ModSounds.orechid, SoundCategory.BLOCKS, 2F, 1F);
+                    }
 
                     mana -= cost;
                     sync();
@@ -104,7 +106,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
 
         for(BlockPos pos : BlockPos.getAllInBox(getPos().add(-rangeX, -rangeY, -rangeX), getPos().add(rangeX, rangeY, rangeX))) {
             IBlockState state = supertile.getWorld().getBlockState(pos);
-            if(definition.matches(supertile.getWorld(), pos, this, state))
+            if(definition.matches(state))
                 possibleCoords.add(pos);
         }
 
