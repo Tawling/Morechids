@@ -18,7 +18,6 @@ package com.towboat.morechids.block.subtile;
 
 import com.towboat.morechids.tweaker.BlockOutputMapping;
 import com.towboat.morechids.tweaker.MorechidDefinition;
-import com.towboat.morechids.tweaker.MorechidRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
