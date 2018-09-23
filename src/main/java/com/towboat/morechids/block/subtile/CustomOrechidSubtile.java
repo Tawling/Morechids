@@ -1,5 +1,6 @@
 /**
  * This class is a modification of vazkii.botania.common.block.subtile.functional.SubTileOrechid
+ * Additional code was copied and modified from vazkii.botania.common.block.subtile.SubTilePureDaisy
  * Modifications were made by Taw
  * Original header included below
  * ***
@@ -16,6 +17,7 @@
  */
 package com.towboat.morechids.block.subtile;
 
+import com.towboat.morechids.tweaker.BlockOutput;
 import com.towboat.morechids.tweaker.BlockOutputMapping;
 import com.towboat.morechids.tweaker.MorechidDefinition;
 import net.minecraft.block.Block;
@@ -32,9 +34,9 @@ import vazkii.botania.api.lexicon.LexiconEntry;
 import vazkii.botania.api.subtile.RadiusDescriptor;
 import vazkii.botania.api.subtile.SubTileFunctional;
 import vazkii.botania.api.subtile.signature.SubTileSignature;
+import vazkii.botania.common.Botania;
 import vazkii.botania.common.core.handler.ConfigHandler;
 import vazkii.botania.common.core.handler.ModSounds;
-import vazkii.botania.common.lexicon.LexiconData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,9 +45,38 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
 
     public MorechidDefinition definition;
     public String name;
+    private static final String TAG_POSITION = "position";
+    private static final String TAG_TICKS_REMAINING = "ticksRemaining";
+    private static final int UPDATE_ACTIVE_EVENT = 0;
+    private static final int RECIPE_COMPLETE_EVENT = 1;
+    private static final int UPDATE_INACTIVE_EVENT = 2;
+
+    private BlockPos[] POSITIONS;
+    private int[] ticksRemaining;
+    private boolean[] activePositions;
+    private BlockOutput[] activeRecipes;
+
+    private int positionAt = 0;
 
     public CustomOrechidSubtile() {
         super();
+    }
+
+    public void init() {
+        if (getTimeCost() <= 0) return;
+        int range = getRange();
+        int rangeY = getRangeY();
+        int posCount = range * range * rangeY - 1;
+        POSITIONS = new BlockPos[posCount];
+        ticksRemaining = new int[posCount];
+        activePositions = new boolean[posCount];
+        int i = 0;
+        for (BlockPos pos : BlockPos.getAllInBox(getPos().add(-range, -rangeY, -range), getPos().add(range, rangeY, range))) {
+            if (pos.getX() == 0 && pos.getY() == 0 && pos.getZ() == 0) continue;
+            POSITIONS[i] = pos;
+            ticksRemaining[i] = -1;
+            activePositions[i] = false;
+        }
     }
 
     @Override
@@ -55,8 +86,61 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
         if(supertile.getWorld().isRemote || redstoneSignal > 0 || !canOperate())
             return;
 
-        int cost = getCost();
-        if(mana >= cost && ticksExisted % getDelay() == 0) {
+        int timeCost = getTimeCost();
+        int manaCost = getManaCost();
+
+        if (timeCost > 0) {
+            if (getWorld().isRemote) {
+                for (int i = 0; i < POSITIONS.length; i++) {
+                    if (activePositions[i]) {
+                        BlockPos coords = POSITIONS[i];
+                        Botania.proxy.sparkleFX(coords.getX() + Math.random(), coords.getY() + Math.random(), coords.getZ() + Math.random(),
+                                ((getColor() >>> 16) & 0xFF)/255F, ((getColor() >>> 8) & 0xFF)/255F, (getColor() & 0xFF)/255F, (float) Math.random(), 5);
+                    }
+                }
+
+                return;
+            }
+
+            positionAt++;
+            if (positionAt == POSITIONS.length) positionAt = 0;
+
+            BlockPos coords = POSITIONS[positionAt];
+            World world = super.getWorld();
+
+            if (!world.isAirBlock(coords)) {
+                IBlockState state = world.getBlockState(coords);
+                if (definition.matches(state)) {
+                    BlockOutput output = activeRecipes[positionAt];
+                    if (output == null) {
+                        output = definition.recipes.get(state).selectBlockOutput();
+                    }
+                    if (ticksRemaining[positionAt] == -1) {
+                        ticksRemaining[positionAt] = getTimeCost();
+                    }
+                    ticksRemaining[positionAt]--;
+
+                    if (ticksRemaining[positionAt] <= 0) {
+                        ticksRemaining[positionAt] = -1;
+                        if (!world.isRemote) {
+                            world.setBlockState(coords, output.selectBlock());
+                        }
+                        world.addBlockEvent(getPos(), supertile.getBlockType(), RECIPE_COMPLETE_EVENT, positionAt);
+                        if (definition.blockBreakParticles) {
+                            supertile.getWorld().playEvent(2001, coords, Block.getStateId(recipe.getOutputState()));
+                        }
+                    }
+                } else {
+                    ticksRemaining[positionAt] = -1;
+                    activeRecipes[positionAt] = null;
+                }
+            } else {
+                ticksRemaining[positionAt] = -1;
+                activeRecipes[positionAt] = null;
+            }
+        }
+
+        if(mana >= manaCost && ticksExisted % getDelay() == 0) {
             BlockPos coords = getCoordsToPut();
             if(coords != null) {
                 ItemStack stack = getOreToPut(supertile.getWorld().getBlockState(coords));
@@ -66,14 +150,53 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
                     supertile.getWorld().setBlockState(coords, block.getStateFromMeta(meta), 1 | 2);
                     if(ConfigHandler.blockBreakParticles)
                         supertile.getWorld().playEvent(2001, coords, Block.getIdFromBlock(block) + (meta << 12));
-                    if (definition.playSound) {
+                    if (Botania.gardenOfGlassLoaded ? definition.playSoundGOG : definition.playSound) {
                         supertile.getWorld().playSound(null, supertile.getPos(), ModSounds.orechid, SoundCategory.BLOCKS, 2F, 1F);
                     }
 
-                    mana -= cost;
+                    mana -= manaCost;
                     sync();
                 }
             }
+        }
+    }
+
+    private void updateActivePositions() {
+        boolean changed = false;
+        for (int i = 0; i < ticksRemaining.length; i++) {
+            if (ticksRemaining[i] > -1) {
+                if (!activePositions[i])
+                    getWorld().addBlockEvent(getPos(), supertile.getBlockType(), UPDATE_ACTIVE_EVENT, i);
+            } else if (activePositions[i]) {
+                getWorld().addBlockEvent(getPos(), supertile.getBlockType(), UPDATE_INACTIVE_EVENT, i);
+            }
+        }
+    }
+
+    @Override
+    public boolean receiveClientEvent(int type, int param) {
+        switch (type) {
+            case UPDATE_ACTIVE_EVENT:
+                activePositions[param] = true;
+                return true;
+            case UPDATE_INACTIVE_EVENT:
+                activePositions[param] = false;
+                return true;
+            case RECIPE_COMPLETE_EVENT:
+                if (getWorld().isRemote) {
+                    BlockPos coords = getPos().add(POSITIONS[param]);
+                    for(int i = 0; i < 25; i++) {
+                        double x = coords.getX() + Math.random();
+                        double y = coords.getY() + Math.random() + 0.5;
+                        double z = coords.getZ() + Math.random();
+
+                        Botania.proxy.wispFX(x, y, z,((getColor() >>> 16) & 0xFF)/255F, ((getColor() >>> 8) & 0xFF)/255F,
+                                (getColor() & 0xFF)/255F, (float) Math.random() / 2F);
+                    }
+                }
+                return true;
+            default:
+                return super.receiveClientEvent(type, param);
         }
     }
 
@@ -103,35 +226,41 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
         int rangeX = getRange();
         int rangeY = getRangeY();
 
-        for(BlockPos pos : BlockPos.getAllInBox(getPos().add(-rangeX, -rangeY, -rangeX), getPos().add(rangeX, rangeY, rangeX))) {
+        for (BlockPos pos : BlockPos.getAllInBox(getPos().add(-rangeX, -rangeY, -rangeX), getPos().add(rangeX, rangeY, rangeX))) {
             IBlockState state = supertile.getWorld().getBlockState(pos);
-            if(definition.matches(state))
+            if (definition.matches(state))
                 possibleCoords.add(pos);
         }
 
-        if(possibleCoords.isEmpty())
+        if (possibleCoords.isEmpty())
             return null;
         return possibleCoords.get(supertile.getWorld().rand.nextInt(possibleCoords.size()));
     }
+
+
 
     public boolean canOperate() {
         return true;
     }
 
-    public int getCost() {
-        return definition.manaCost;
+    public int getManaCost() {
+        return Botania.gardenOfGlassLoaded ? definition.manaCostGOG : definition.manaCost;
+    }
+
+    public int getTimeCost() {
+        return Botania.gardenOfGlassLoaded ? definition.timeCostGOG : definition.timeCost;
     }
 
     public int getDelay() {
-        return definition.delay;
+        return Botania.gardenOfGlassLoaded ? definition.delayGOG : definition.delay;
     }
 
     public int getRange() {
-        return definition.range;
+        return Botania.gardenOfGlassLoaded ? definition.rangeGOG : definition.range;
     }
 
     public int getRangeY() {
-        return definition.rangeY;
+        return Botania.gardenOfGlassLoaded ? definition.rangeYGOG : definition.rangeY;
     }
 
     @Override
@@ -146,17 +275,17 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
 
     @Override
     public int getColor() {
-        return definition.particleColor;
+        return Botania.gardenOfGlassLoaded ? definition.particleColorGOG : definition.particleColor;
     }
 
     @Override
     public int getMaxMana() {
-        return getCost();
+        return getManaCost();
     }
 
     @Override
     public LexiconEntry getEntry() {
-        return LexiconData.orechid;
+        return null;
     }
 
     public String getIdentifier() {
@@ -164,18 +293,18 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     }
     @Override
     public String getUnlocalizedNameForStack(ItemStack itemStack) {
-        return "morechids:morechid." + getIdentifier();
+        return "morechids:" + getIdentifier();
     }
 
     @Override
     public String getUnlocalizedLoreTextForStack(ItemStack itemStack) {
-        return "morechids:morechid." + getIdentifier() + ".reference";
+        return "morechids:" + getIdentifier() + ".reference";
     }
 
     @SideOnly(Side.CLIENT)
     @Override
     public void addTooltip(ItemStack stack, World world, List<String> tooltip) {
-        if(getCost() == 0)
+        if(getManaCost() == 0)
             tooltip.add(TextFormatting.BLUE + I18n.translateToLocal("botania.flowerType.special"));
         else
             tooltip.add(TextFormatting.BLUE + I18n.translateToLocal("botania.flowerType.functional"));

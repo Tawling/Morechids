@@ -20,7 +20,7 @@ import java.util.ArrayList;
 public class Morechids {
     public static final String MODID = "morechids";
     public static final String NAME = "Morechids";
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "1.0.1";
 
     @Mod.Instance(MODID)
     public static Morechids instance;
@@ -56,7 +56,6 @@ public class Morechids {
                 if (outputs.isEmpty()) {
                     removals.add(state);
                 } else {
-                    ArrayList<Object> outputRemovals = new ArrayList<>();
                     for (int i = outputs.size()-1; i >= 0; i--) {
                         if (outputs.get(i).isEmpty()) {
                             outputs.remove(i);
