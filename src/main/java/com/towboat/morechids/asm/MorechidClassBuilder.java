@@ -47,6 +47,18 @@ public class MorechidClassBuilder {
         GeneratorAdapter constructorGenerator = new GeneratorAdapter(Opcodes.ACC_PUBLIC, customOrechidConstructor, null, null, classWriter);
         constructorGenerator.loadThis();
         constructorGenerator.invokeConstructor(baseMorechidType, customOrechidConstructor);
+
+        // store a reference to the registry definition
+        constructorGenerator.loadThis();
+        constructorGenerator.push(name);
+        constructorGenerator.invokeStatic(Type.getType(MorechidRegistry.class), Method.getMethod(MorechidDefinition.class.getName() +" getFlower (String)"));
+        constructorGenerator.putField(Type.getType("Morechid_"+name), "definition", Type.getType(MorechidDefinition.class));
+
+        // store the configuration name
+        constructorGenerator.loadThis();
+        constructorGenerator.push(name);
+        constructorGenerator.putField(Type.getType("Morechid_"+name), "name", Type.getType(String.class));
+
         constructorGenerator.returnValue();
         constructorGenerator.endMethod();
 

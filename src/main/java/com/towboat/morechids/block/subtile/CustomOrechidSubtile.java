@@ -42,11 +42,11 @@ import java.util.List;
 
 public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSignature {
 
-    private MorechidDefinition definition;
+    public MorechidDefinition definition;
+    public String name;
 
     public CustomOrechidSubtile() {
         super();
-        this.definition = MorechidRegistry.morechids.get(getClass().getSimpleName().split("_",2)[1]);
     }
 
     @Override
