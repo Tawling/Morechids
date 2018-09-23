@@ -28,11 +28,17 @@ public class BlockOutputMapping extends ArrayList<BlockOutput> {
     }
 
     public IBlockState selectBlock() {
+        BlockOutput bo = selectBlockOutput();
+        if (bo == null) return null;
+        return bo.selectBlock();
+    }
+
+    public BlockOutput selectBlockOutput() {
         double cutoff = Math.random()*totalWeight;
         for (BlockOutput bo : this) {
             cutoff -= bo.weight;
             if (cutoff <= 0) {
-                return (IBlockState)bo.toArray()[(int)Math.floor(Math.random()*bo.size())];
+                return bo;
             }
         }
         return null;

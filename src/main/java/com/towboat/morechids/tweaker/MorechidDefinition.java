@@ -3,7 +3,10 @@ package com.towboat.morechids.tweaker;
 import com.blamejared.mtlib.helpers.InputHelper;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.item.IIngredient;
+import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.liquid.ILiquidStack;
+import crafttweaker.api.oredict.IOreDictEntry;
+import crafttweaker.mc1120.oredict.MCOreDictEntry;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
@@ -27,6 +30,14 @@ public class MorechidDefinition {
     public int rangeY = 3;
     public int particleColor = 0x818181;
     public boolean playSound = true;
+
+    public int manaCostGOG = 700;
+    public int timeCostGOG = 0;
+    public int delayGOG = 2;
+    public int rangeGOG = 5;
+    public int rangeYGOG = 3;
+    public int particleColorGOG = 0x818181;
+    public boolean playSoundGOG = true;
 
     public HashMap<Object, BlockOutputMapping> recipes = new HashMap<>();
 
@@ -55,7 +66,6 @@ public class MorechidDefinition {
 
     @ZenMethod
     public void addRecipe(IIngredient input, IIngredient output, double weight) {
-
         if (input == null || output == null) {
             return;
         }
@@ -108,10 +118,28 @@ public class MorechidDefinition {
     private IBlockState[] convertToBlocks(IIngredient input) {
 
         Object obj = InputHelper.toObject(input);
-        if (!(input instanceof ILiquidStack)) {
+
+        System.out.println(input.getClass());
+        if (!(input instanceof ILiquidStack || input instanceof MCOreDictEntry)) {
             if (obj == null || (obj instanceof ItemStack && !InputHelper.isABlock((ItemStack) obj))) {
                 return new IBlockState[0];
             }
+        }
+
+        if (input instanceof MCOreDictEntry) {
+            ItemStack[] stacks = InputHelper.toStacks(((MCOreDictEntry)input).getItemArray());
+            System.out.print("Total blocks in ItemStack[]: ");
+            System.out.println(stacks.length);
+            if (stacks.length == 0) return new IBlockState[0];
+            IBlockState[] res = new IBlockState[stacks.length];
+            for (int i = 0; i < stacks.length; i++) {
+                ItemStack stack = stacks[i];
+                res[i] = Block.getBlockFromItem(stack.getItem()).getStateFromMeta(stack.getMetadata());
+                System.out.println(res[i]);
+            }
+            System.out.print("Total blocks in oredict: ");
+            System.out.println(res.length);
+            return res;
         }
 
         if (obj instanceof ItemStack) {

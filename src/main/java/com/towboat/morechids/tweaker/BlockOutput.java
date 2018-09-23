@@ -12,4 +12,8 @@ import java.util.HashSet;
  */
 public class BlockOutput extends HashSet<IBlockState> {
     public double weight;
+
+    public IBlockState selectBlock() {
+        return (IBlockState)this.toArray()[(int)Math.floor(Math.random()*this.size())];
+    }
 }
