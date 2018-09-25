@@ -2,6 +2,9 @@
 Unlimited customizable Orechid variants for botanical progression
 
 
+# The following documentation does not reflect the existing functionality of the mod. It is my projection of the future functionality that I am working on implementing. Hopefully it'll be a reality soon. Don't get too excited.
+
+
 # Flower Creation
 
 ## Defining Flowers
@@ -19,11 +22,11 @@ For example, the following JSON structure would create two flowers with unique n
 ```
 
 ### Supplying Textures and Resources
-Each custom flower can have external resources provided just like any other block. The resource path is based on the unique name you use to define your flower. For the example above, the resource paths for the two flowers would be `morechids:myflower` and `morechids:mysecondflower`.
+Each custom flower can have external resources provided just like any other block. The resource path is based on the unique name you use to define your flower. For the example above, the resource paths for the two flowers would be `morechids:myflower` and `morechids:my_second_flower`. Resources can be provided with a resource pack or using a mod such as **ResourceLoader**.
 
 ## Configuring Your Morechids
 
-Each Morechid you create can have each parameter individually configured. Morechids can be configured to cost mana like an Orechid, time like a Pure Daisy, or some combination of the two. Any parameter can be configured to act differently in a Garden Of Glass world simply by appending "GOG" to the end of the parameter name.
+Each Morechid you create can have each parameter individually configured. Morechids can be configured to cost mana like an Orechid, time like a Pure Daisy, or some combination of the two. Any parameter can be configured to act differently in a Garden Of Glass world simply by appending "GOG" to the end of the parameter name. If not explicitly specified, all "GOG" parameters will default to the same value as the corresponding non-"GOG" parameter.
 
 **Example configuration for mimicking Botania's Orechid behavior:** (minus the recipes)
 *(Note: recipes must be configured separately through CraftTweaker)*
@@ -81,17 +84,22 @@ Each Morechid you create can have each parameter individually configured. Morech
   * **This number can cause performance issues.** See the **Performance Concerns** section for more details.
 
 * `maxMana` / `maxManaGOG`: ***Integer*** [`manaCost` ~ ∞] *(default: same as `manaCost`)*
+  * The maximum amount of mana that can be stored in this flower's buffer. A number larger than `manaCost` may allow for multiple blocks to be converted before the flower runs out of mana.
+  * If `manaCost` is 0, this value will be ignored.
 
-* `color` / `colorGOG`: ***String*** *(default: randomized by flower name)*
+* `particleColor` / `particleColorGOG`: ***String*** *(default: randomized by flower name)*
   * A hex value as a string (ex: "FF0000") representing the color of sparkles coming off the flower when active, and the default flower color if no other resource is provided.
   * If not specified, a random color will be selected. This color is guaranteed to be consistent for any given flower name.
 
 * `playSound` / `playSoundGOG`: ***Boolean*** *(default: true)*
   * If true, the Orechid **BANG!** sound will play when a block is converted.
 
-* `rangeCheckInterval` / `rangeCheckInterval`: ***Integer*** [1 ~ `cooldown`] (default: `cooldown`)
+* `rangeCheckInterval` / `rangeCheckIntervalGOG`: ***Integer*** [1 ~ `cooldown`] *(default: `cooldown`)*
   * The number of ticks to wait between checks for newly placed blocks.
   * **This number can cause performance issues.** See the **Performance Concerns** section for more details.
+
+* `blockBreakParticles` / `blockBreakParticlesGOG`: ***Boolean*** *(default: true)*
+  * If true, block breaking particles will appear when a block is converted.
 
 ### Performance Concerns and Behavior Oddities
 In order to locate blocks to convert, flowers must search the surrounding area for valid candidates. This requires checking every block within the flower's range, meaning a volume of `(2*range + 1)^2 + 2*rangeY` blocks. For a flower with `range` of 5 and `rangeY` of 3 (like the *default* Orechid), this would mean ***127 blocks every tick***.
@@ -107,20 +115,21 @@ Adding recipes to a Morechid is very straight forward and simply requires the us
 * `mods.morechids.Registry.getFlower(String identifier)`; returns `MorechidDefinition`
   * Returns a `MorechidDefinition` object used to define recipes for the flower with the given `identifier`.
 
-* `MorechidDefinition#addRecipe(IIngredient input, IIngredient output, double weight)`
+* `MorechidDefinition::addRecipe(IIngredient input, IIngredient output, double weight)`
   * Adds a conversion from the `input` block(s) to the `output` block(s) with the given `weight` used to specify the probability of this recipe being selected as a conversion. Each call to `addRecipe` adds a new conversion entry for each input block into the recipe set for this flower. If `output` contains an array of items or an Ore Dictionary entry, the recipe entry will contain the *entire set of all blocks in `output`*, rather than each output block being its own separate entry. If an entry with an array of outputs is selected for a conversion, the actual converted block is selected uniformly at random from the array.
   * If the same `output` is added for an `input` block again in a different call to `addRecipe()`, a new recipe entry will be created for that output block *in addition to any existing entries that may contain the same output block*.
   * `input` and `output` can be any item or liquid that has a block representation, an Ore Dictionary entry containing blocks, or an array of items that have block representations.
+  * `weight` is a positive number added to each recipe entry. The probability of any entry being selected for a given `input` block is `weight` of the entry divided by the sum of the `weight` values for every recipe entry associated with that `input` block.
 
-* `MorechidDefinition#removeRecipe(IIngredient input, IIngredient output)`
+* `MorechidDefinition::removeRecipe(IIngredient input, IIngredient output)`
   * Removes the ability for any of the `input` block(s) to be converted to any of the `output` block(s). This is applied to *ALL* recipe entries associated with this flower. Any recipe entries for each `input` block which contain any `output` block will have that `output` block removed from its set of possible outputs for the entry, but *the entry will not be removed entirely* unless this removal causes the entry to be completely empty.
   * `input` and `output` can be any item or liquid that has a block representation, an Ore Dictionary entry containing blocks, or an array of items that have block representations.
 
-* `MorechidDefinition#removeOutput(IIngredient output)`
+* `MorechidDefinition::removeOutput(IIngredient output)`
   * Removes the specified `output` block(s) as an output for all recipe entries that may contain it, regardless of input block.
   * `output` can be any item or liquid that has a block representation, an Ore Dictionary entry containing blocks, or an array of items that have block representations.
 
-* `MorechidDefinition#removeInput(IIngredient input)`
+* `MorechidDefinition::removeInput(IIngredient input)`
   * Removes the specified `input` block(s) as an input for all recipe entries that may contain it, regardless of output block.
   * `input` can be any item or liquid that has a block representation, an Ore Dictionary entry containing blocks, or an array of items that have block representations.
 
