@@ -209,7 +209,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
             }
         }
 
-        IBlockState state = mapping.selectBlock();
+        IBlockState state = mapping.selectBlock(supertile.getWorld().rand);
         if (state == null) {
             return ItemStack.EMPTY;
         }
