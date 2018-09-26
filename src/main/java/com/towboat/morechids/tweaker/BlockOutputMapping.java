@@ -3,6 +3,7 @@ package com.towboat.morechids.tweaker;
 import net.minecraft.block.state.IBlockState;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * BlockOutputMapping.java
@@ -27,14 +28,14 @@ public class BlockOutputMapping extends ArrayList<BlockOutput> {
         return res;
     }
 
-    public IBlockState selectBlock() {
-        BlockOutput bo = selectBlockOutput();
+    public IBlockState selectBlock(Random rand) {
+        BlockOutput bo = selectBlockOutput(rand);
         if (bo == null) return null;
-        return bo.selectBlock();
+        return bo.selectBlock(rand);
     }
 
-    public BlockOutput selectBlockOutput() {
-        double cutoff = Math.random()*totalWeight;
+    public BlockOutput selectBlockOutput(Random rand) {
+        double cutoff = rand.nextDouble() * totalWeight;
         for (BlockOutput bo : this) {
             cutoff -= bo.weight;
             if (cutoff <= 0) {

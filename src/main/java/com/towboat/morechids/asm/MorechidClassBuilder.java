@@ -59,6 +59,10 @@ public class MorechidClassBuilder {
         constructorGenerator.push(name);
         constructorGenerator.putField(Type.getType("Morechid_"+name), "name", Type.getType(String.class));
 
+        // call init() function
+        constructorGenerator.loadThis();
+        constructorGenerator.invokeVirtual(baseMorechidType, Method.getMethod("void  init ()"));
+
         constructorGenerator.returnValue();
         constructorGenerator.endMethod();
 
