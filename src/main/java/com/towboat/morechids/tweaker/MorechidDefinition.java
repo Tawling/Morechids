@@ -30,6 +30,7 @@ public class MorechidDefinition {
     public int rangeY = 3;
     public int particleColor = 0x818181;
     public boolean playSound = true;
+    public boolean blockBreakParticles = true;
 
     public int manaCostGOG = 700;
     public int timeCostGOG = 0;
@@ -38,6 +39,7 @@ public class MorechidDefinition {
     public int rangeYGOG = 3;
     public int particleColorGOG = 0x818181;
     public boolean playSoundGOG = true;
+    public boolean blockBreakParticlesGOG = true;
 
     public HashMap<Object, BlockOutputMapping> recipes = new HashMap<>();
 

@@ -54,9 +54,12 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     private BlockPos[] POSITIONS;
     private int[] ticksRemaining;
     private boolean[] activePositions;
-    private BlockOutput[] activeRecipes;
 
     private int positionAt = 0;
+
+    private int cooldown = 0;
+
+    private boolean initialized = false;
 
     public CustomOrechidSubtile() {
         super();
@@ -66,16 +69,18 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
         if (getTimeCost() <= 0) return;
         int range = getRange();
         int rangeY = getRangeY();
-        int posCount = range * range * rangeY - 1;
+        int posCount = (2 * range + 1) * (2 * range + 1) * (2 * rangeY + 1);
+        System.out.println(posCount);
         POSITIONS = new BlockPos[posCount];
         ticksRemaining = new int[posCount];
         activePositions = new boolean[posCount];
         int i = 0;
-        for (BlockPos pos : BlockPos.getAllInBox(getPos().add(-range, -rangeY, -range), getPos().add(range, rangeY, range))) {
+        for (BlockPos pos :  BlockPos.getAllInBox(getPos().add(-range, -rangeY, -range), getPos().add(range, rangeY, range))) {
             if (pos.getX() == 0 && pos.getY() == 0 && pos.getZ() == 0) continue;
             POSITIONS[i] = pos;
             ticksRemaining[i] = -1;
             activePositions[i] = false;
+            i++;
         }
     }
 
@@ -83,13 +88,25 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     public void onUpdate() {
         super.onUpdate();
 
+        if (!initialized) {
+            init();
+            initialized = true;
+        }
+
         if(supertile.getWorld().isRemote || redstoneSignal > 0 || !canOperate())
             return;
 
         int timeCost = getTimeCost();
         int manaCost = getManaCost();
 
+        if (cooldown > 0) {
+            cooldown--;
+        }
+
         if (timeCost > 0) {
+            if (ticksExisted % getDelay() == 0) {
+                updateActivePositions();
+            }
             if (getWorld().isRemote) {
                 for (int i = 0; i < POSITIONS.length; i++) {
                     if (activePositions[i]) {
@@ -111,36 +128,31 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
             if (!world.isAirBlock(coords)) {
                 IBlockState state = world.getBlockState(coords);
                 if (definition.matches(state)) {
-                    BlockOutput output = activeRecipes[positionAt];
-                    if (output == null) {
-                        output = definition.recipes.get(state).selectBlockOutput();
-                    }
-                    if (ticksRemaining[positionAt] == -1) {
+                    if (ticksRemaining[positionAt] == -2) {
                         ticksRemaining[positionAt] = getTimeCost();
                     }
-                    ticksRemaining[positionAt]--;
-
-                    if (ticksRemaining[positionAt] <= 0) {
-                        ticksRemaining[positionAt] = -1;
+                    if (ticksRemaining[positionAt] > 0) {
+                        ticksRemaining[positionAt]--;
+                    } else if ((manaCost == 0 || mana >= manaCost) && cooldown <= 0) {
+                        ticksRemaining[positionAt] = -2;
+                        IBlockState output = definition.recipes.get(state).selectBlock(world.rand);
                         if (!world.isRemote) {
-                            world.setBlockState(coords, output.selectBlock());
+                            world.setBlockState(coords, output);
                         }
                         world.addBlockEvent(getPos(), supertile.getBlockType(), RECIPE_COMPLETE_EVENT, positionAt);
-                        if (definition.blockBreakParticles) {
-                            supertile.getWorld().playEvent(2001, coords, Block.getStateId(recipe.getOutputState()));
+                        if (Botania.gardenOfGlassLoaded ? definition.blockBreakParticlesGOG : definition.blockBreakParticles) {
+                            supertile.getWorld().playEvent(2001, coords, Block.getStateId(output));
                         }
+                        mana -= manaCost;
+                        cooldown = getDelay();
                     }
                 } else {
-                    ticksRemaining[positionAt] = -1;
-                    activeRecipes[positionAt] = null;
+                    ticksRemaining[positionAt] = -2;
                 }
             } else {
-                ticksRemaining[positionAt] = -1;
-                activeRecipes[positionAt] = null;
+                ticksRemaining[positionAt] = -2;
             }
-        }
-
-        if(mana >= manaCost && ticksExisted % getDelay() == 0) {
+        } else if(manaCost > 0 && mana >= manaCost && ticksExisted % getDelay() == 0 && cooldown <= 0) {
             BlockPos coords = getCoordsToPut();
             if(coords != null) {
                 ItemStack stack = getOreToPut(supertile.getWorld().getBlockState(coords));
@@ -155,14 +167,15 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
                     }
 
                     mana -= manaCost;
+                    cooldown = getDelay();
                     sync();
                 }
             }
         }
+
     }
 
     private void updateActivePositions() {
-        boolean changed = false;
         for (int i = 0; i < ticksRemaining.length; i++) {
             if (ticksRemaining[i] > -1) {
                 if (!activePositions[i])
