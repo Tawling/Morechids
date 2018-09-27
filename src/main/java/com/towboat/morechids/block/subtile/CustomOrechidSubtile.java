@@ -50,6 +50,8 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     private static final int UPDATE_ACTIVE_EVENT = 0;
     private static final int RECIPE_COMPLETE_EVENT = 1;
     private static final int UPDATE_INACTIVE_EVENT = 2;
+    
+    private static final int INACTIVE = -2;
 
     private BlockPos[] POSITIONS;
     private int[] ticksRemaining;
@@ -81,7 +83,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
         for (BlockPos pos :  BlockPos.getAllInBox(getPos().add(-range, -rangeY, -range), getPos().add(range, rangeY, range))) {
             if (pos.getX() == p.getX() && pos.getY() == p.getY() && pos.getZ() == p.getZ()) continue;
             POSITIONS[i] = pos;
-            ticksRemaining[i] = -2;
+            ticksRemaining[i] = INACTIVE;
             activePositions[i] = false;
             i++;
         }
@@ -97,7 +99,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
         if (redstoneSignal > 0 || !canOperate())
             return;
 
-        int cooldown = nextValidTick - ticksExisted;
+        boolean readyToConvert = nextValidTick - ticksExisted <= 0;
 
         int timeCost = getTimeCost();
         int manaCost = getManaCost();
@@ -108,23 +110,26 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
                 locateActiveBlocks();
             }
             for (int bpt = Math.min(POSITIONS.length, MAX_BLOCKS_PER_TICK); bpt > 0; bpt --) {
-                positionAt++;
-                if (positionAt >= POSITIONS.length) positionAt = 0;
+
+                positionAt = (positionAt + 1) % POSITIONS.length;
+
                 BlockPos pos = POSITIONS[positionAt];
                 World world = supertile.getWorld();
                 if (!world.isAirBlock(pos)) {
                     IBlockState inputBlock = world.getBlockState(pos);
                     if (definition.matches(inputBlock)) {
-                        if (ticksRemaining[positionAt] <= -2) {
+                        if (ticksRemaining[positionAt] <= INACTIVE) {
                             ticksRemaining[positionAt] = timeCost;
-                        } else if (ticksRemaining[positionAt] <= 0 && mana >= manaCost && cooldown <= 0) {
-                            ticksRemaining[positionAt] = -2;
+                        } else if (ticksRemaining[positionAt] <= 0 && mana >= manaCost && readyToConvert) {
+                            ticksRemaining[positionAt] = INACTIVE;
                             IBlockState outputBlock = definition.recipes.get(inputBlock).selectBlock(world.rand);
                             if (!world.isRemote) {
                                 world.setBlockState(pos, outputBlock);
                                 if (Botania.gardenOfGlassLoaded ? definition.blockBreakParticlesGOG : definition.blockBreakParticles) {
-
                                     supertile.getWorld().playEvent(2001, pos, Block.getStateId(outputBlock));
+                                }
+                                if (Botania.gardenOfGlassLoaded ? definition.playSoundGOG : definition.playSound) {
+                                    supertile.getWorld().playSound(null, supertile.getPos(), ModSounds.orechid, SoundCategory.BLOCKS, 2F, 1F);
                                 }
                             }
                             world.addBlockEvent(getPos(), supertile.getBlockType(), RECIPE_COMPLETE_EVENT, positionAt);
@@ -133,13 +138,13 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
                             nextValidTick = ticksExisted + getCooldown();
                         }
                     } else {
-                        ticksRemaining[positionAt] = -2;
+                        ticksRemaining[positionAt] = INACTIVE;
                     }
                 } else {
-                    ticksRemaining[positionAt] = -2;
+                    ticksRemaining[positionAt] = INACTIVE;
                 }
             }
-        } else if (mana >= manaCost && cooldown <= 0 && ticksExisted % getRangeCheckInterval() == 0 && !supertile.getWorld().isRemote) {
+        } else if (mana >= manaCost && readyToConvert && ticksExisted % getRangeCheckInterval() == 0 && !supertile.getWorld().isRemote) {
             BlockPos coords = getCoordsToPut();
             if(coords != null) {
                 ItemStack stack = getOreToPut(supertile.getWorld().getBlockState(coords));
@@ -147,7 +152,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
                     Block block = Block.getBlockFromItem(stack.getItem());
                     int meta = stack.getItemDamage();
                     supertile.getWorld().setBlockState(coords, block.getStateFromMeta(meta), 1 | 2);
-                    if(ConfigHandler.blockBreakParticles)
+                    if(Botania.gardenOfGlassLoaded ? definition.blockBreakParticlesGOG : definition.blockBreakParticles)
                         supertile.getWorld().playEvent(2001, coords, Block.getIdFromBlock(block) + (meta << 12));
                     if (Botania.gardenOfGlassLoaded ? definition.playSoundGOG : definition.playSound) {
                         supertile.getWorld().playSound(null, supertile.getPos(), ModSounds.orechid, SoundCategory.BLOCKS, 2F, 1F);
@@ -169,7 +174,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
                 changed = true;
 
             }
-            if (ticksRemaining[i] > -2 && getWorld().isRemote) {
+            if (ticksRemaining[i] > INACTIVE && getWorld().isRemote) {
                 BlockPos coords = POSITIONS[i];
                 Botania.proxy.sparkleFX(coords.getX() + Math.random(), coords.getY() + Math.random(), coords.getZ() + Math.random(),
                         ((getColor() >>> 16) & 0xFF) / 255F, ((getColor() >>> 8) & 0xFF) / 255F, (getColor() & 0xFF) / 255F, (float) Math.random(), 5);
@@ -181,7 +186,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     public boolean locateActiveBlocks() {
         boolean changed = false;
         for (int i = 0; i < POSITIONS.length; i++) {
-            if (ticksRemaining[i] > -2) {
+            if (ticksRemaining[i] > INACTIVE) {
                 if (!activePositions[i]) {
                     changed = true;
                     getWorld().addBlockEvent(getPos(), supertile.getBlockType(), UPDATE_ACTIVE_EVENT, i);
@@ -244,10 +249,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     private BlockPos getCoordsToPut() {
         List<BlockPos> possibleCoords = new ArrayList<>();
 
-        int rangeX = getRange();
-        int rangeY = getRangeY();
-
-        for (BlockPos pos : BlockPos.getAllInBox(getPos().add(-rangeX, -rangeY, -rangeX), getPos().add(rangeX, rangeY, rangeX))) {
+        for (BlockPos pos : POSITIONS) {
             IBlockState state = supertile.getWorld().getBlockState(pos);
             if (definition.matches(state))
                 possibleCoords.add(pos);

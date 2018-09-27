@@ -47,7 +47,9 @@ public class ConfigHandler {
                 ry = false,
                 pc = false,
                 ps = false,
-                rci = false;
+                rci = false,
+                bbp = false,
+                mm = false;
         while (reader.hasNext()) {
             String name = reader.nextName();
             System.out.print("Name: ");
@@ -75,6 +77,12 @@ public class ConfigHandler {
             } else if (name.equals("rangeCheckInterval")) {
                 def.rangeCheckInterval = reader.nextInt();
                 if (!rci) def.rangeCheckIntervalGOG = def.rangeCheckInterval;
+            } else if (name.equals("blockBreakParticles")) {
+                def.blockBreakParticles = reader.nextBoolean();
+                if (!bbp) def.blockBreakParticlesGOG = def.blockBreakParticles;
+            } else if (name.equals("maxMana")) {
+                def.maxMana = reader.nextInt();
+                if (!mm) def.maxManaGOG = def.maxMana;
             } else if (name.equals("manaCostGOG")) {
                 def.manaCostGOG = reader.nextInt();
                 mc = true;
@@ -99,6 +107,12 @@ public class ConfigHandler {
             } else if (name.equals("rangeCheckIntervalGOG")) {
                 def.rangeCheckIntervalGOG = reader.nextInt();
                 rci = true;
+            } else if (name.equals("blockBreakParticlesGOG")) {
+                def.blockBreakParticlesGOG = reader.nextBoolean();
+                bbp = true;
+            } else if (name.equals("blockBreakParticlesGOG")) {
+                def.maxManaGOG = reader.nextInt();
+                mm = true;
             } else {
                 reader.skipValue();
             }

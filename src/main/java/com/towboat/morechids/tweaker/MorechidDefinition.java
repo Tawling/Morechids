@@ -34,10 +34,10 @@ public class MorechidDefinition {
     public boolean blockBreakParticles = true;
     public int rangeCheckInterval = 1;
 
-    public int manaCostGOG = 700;
+    public int manaCostGOG = 17500;
+    public int maxManaGOG = 17500;
     public int timeCostGOG = 0;
-    public int maxManaGOG = 700;
-    public int cooldownGOG = 2;
+    public int cooldownGOG = 100;
     public int rangeGOG = 5;
     public int rangeYGOG = 3;
     public int particleColorGOG = 0x818181;
@@ -121,6 +121,28 @@ public class MorechidDefinition {
         }
     }
 
+    @ZenMethod
+    public void removeOutput(IIngredient block) {
+        IBlockState state = convertToBlocks(block)[0];
+        for (BlockOutputMapping mapping : recipes.values()) {
+            for (BlockOutput bo : mapping) {
+                bo.remove(state);
+                if (bo.isEmpty())
+                    mapping.remove(bo);
+            }
+            if (mapping.isEmpty()) {
+                recipes.remove(state);
+            }
+        }
+    }
+
+    @ZenMethod
+    public void removeInput(IIngredient block) {
+        IBlockState state = convertToBlocks(block)[0];
+        recipes.remove(state);
+        recipes.remove(state.getBlock());
+    }
+
     private IBlockState[] convertToBlocks(IIngredient input) {
 
         Object obj = InputHelper.toObject(input);
@@ -133,7 +155,7 @@ public class MorechidDefinition {
         }
 
         if (input instanceof MCOreDictEntry) {
-            ItemStack[] stacks = InputHelper.toStacks(((MCOreDictEntry)input).getItemArray());
+            ItemStack[] stacks = InputHelper.toStacks(input.getItemArray());
             System.out.print("Total blocks in ItemStack[]: ");
             System.out.println(stacks.length);
             if (stacks.length == 0) return new IBlockState[0];
