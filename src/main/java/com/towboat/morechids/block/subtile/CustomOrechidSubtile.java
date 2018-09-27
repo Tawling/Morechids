@@ -330,6 +330,12 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     public String getIdentifier() {
         return definition.getIdentifier();
     }
+
+    @Override
+    public String getUnlocalizedName() {
+        return "morechids:" + getIdentifier();
+    }
+
     @Override
     public String getUnlocalizedNameForStack(ItemStack itemStack) {
         return "morechids:" + getIdentifier();
@@ -343,7 +349,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     @SideOnly(Side.CLIENT)
     @Override
     public void addTooltip(ItemStack stack, World world, List<String> tooltip) {
-        if(getManaCost() == 0)
+        if(getManaCost() <= 0)
             tooltip.add(TextFormatting.BLUE + I18n.translateToLocal("botania.flowerType.special"));
         else
             tooltip.add(TextFormatting.BLUE + I18n.translateToLocal("botania.flowerType.functional"));

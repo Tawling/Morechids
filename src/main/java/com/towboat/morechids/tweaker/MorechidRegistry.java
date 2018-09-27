@@ -33,7 +33,7 @@ public class MorechidRegistry {
         System.out.println("Registering morechid: " + identifier);
 
         MorechidDefinition def = new MorechidDefinition(identifier);
-        morechids.put(identifier, def);
+        morechids.put(identifier.toLowerCase(), def);
 
         Class<? extends CustomOrechidSubtile> flowerClass = MorechidClassBuilder.generateMorechid(def.getIdentifier());
 
@@ -43,6 +43,11 @@ public class MorechidRegistry {
         BotaniaAPI.addSubTileToCreativeMenu(def.getIdentifier());
 
         BotaniaAPIClient.registerSubtileModel(flowerClass, new ModelResourceLocation("morechids:" + identifier));
+        try {
+            BotaniaAPI.registerSubTileSignature(flowerClass, flowerClass.newInstance());
+        }catch(Exception e){
+
+        }
 
         ResourceInitializer.initializeResource(identifier);
 
@@ -53,7 +58,7 @@ public class MorechidRegistry {
 
     @ZenMethod
     public static MorechidDefinition getFlower(String identifier) {
-        return morechids.get(identifier);
+        return morechids.get(identifier.toLowerCase());
     }
 
 
@@ -104,7 +109,7 @@ class ResourceInitializer {
                 w.flush();
                 w.close();
 
-                File png = new File(textures,identifier + ".png");
+                File png = new File(textures, identifier + ".png");
                 if (!png.exists()) {
                     InputStream is = null;
                     OutputStream os = null;
