@@ -42,11 +42,12 @@ public class ConfigHandler {
         // flags for GOG values to allow overrides.
         boolean mc = false,
                 tc = false,
-                d = false,
+                cd = false,
                 r = false,
                 ry = false,
                 pc = false,
-                ps = false;
+                ps = false,
+                rci = false;
         while (reader.hasNext()) {
             String name = reader.nextName();
             System.out.print("Name: ");
@@ -56,9 +57,9 @@ public class ConfigHandler {
             } else if (name.equals("timeCost")) {
                 def.timeCost = reader.nextInt();
                 if (!tc) def.timeCostGOG = def.timeCost;
-            } else if (name.equals("delay")) {
-                def.delay = reader.nextInt();
-                if (!d) def.delayGOG = def.delay;
+            } else if (name.equals("cooldown")) {
+                def.cooldown = reader.nextInt();
+                if (!cd) def.cooldownGOG = def.cooldown;
             } else if (name.equals("range")) {
                 def.range = reader.nextInt();
                 if (!r) def.range = def.rangeGOG;
@@ -71,6 +72,9 @@ public class ConfigHandler {
             } else if (name.equals("playSound")) {
                 def.playSound = reader.nextBoolean();
                 if (!ps) def.playSoundGOG = def.playSound;
+            } else if (name.equals("rangeCheckInterval")) {
+                def.rangeCheckInterval = reader.nextInt();
+                if (!rci) def.rangeCheckIntervalGOG = def.rangeCheckInterval;
             } else if (name.equals("manaCostGOG")) {
                 def.manaCostGOG = reader.nextInt();
                 mc = true;
@@ -78,8 +82,8 @@ public class ConfigHandler {
                 def.timeCostGOG = reader.nextInt();
                 tc = true;
             } else if (name.equals("delayGOG")) {
-                def.delayGOG = reader.nextInt();
-                d = true;
+                def.cooldownGOG = reader.nextInt();
+                cd = true;
             } else if (name.equals("rangeGOG")) {
                 def.rangeGOG = reader.nextInt();
                 r = true;
@@ -92,6 +96,11 @@ public class ConfigHandler {
             } else if (name.equals("playSoundGOG")) {
                 def.playSoundGOG = reader.nextBoolean();
                 ps = true;
+            } else if (name.equals("rangeCheckIntervalGOG")) {
+                def.rangeCheckIntervalGOG = reader.nextInt();
+                rci = true;
+            } else {
+                reader.skipValue();
             }
         }
         reader.endObject();

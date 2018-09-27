@@ -24,22 +24,26 @@ import java.util.HashMap;
 public class MorechidDefinition {
     public String identifier;
     public int manaCost = 17500;
+    public int maxMana = 17500;
     public int timeCost = 0;
-    public int delay = 100;
+    public int cooldown = 100;
     public int range = 5;
     public int rangeY = 3;
     public int particleColor = 0x818181;
     public boolean playSound = true;
     public boolean blockBreakParticles = true;
+    public int rangeCheckInterval = 1;
 
     public int manaCostGOG = 700;
     public int timeCostGOG = 0;
-    public int delayGOG = 2;
+    public int maxManaGOG = 700;
+    public int cooldownGOG = 2;
     public int rangeGOG = 5;
     public int rangeYGOG = 3;
     public int particleColorGOG = 0x818181;
     public boolean playSoundGOG = true;
     public boolean blockBreakParticlesGOG = true;
+    public int rangeCheckIntervalGOG = 1;
 
     public HashMap<Object, BlockOutputMapping> recipes = new HashMap<>();
 

@@ -57,9 +57,11 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
 
     private int positionAt = 0;
 
-    private int cooldown = 0;
+    private int nextValidTick = 0;
 
     private boolean initialized = false;
+
+    private static final int MAX_BLOCKS_PER_TICK = 1000;
 
     public CustomOrechidSubtile() {
         super();
@@ -69,16 +71,17 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
         if (getTimeCost() <= 0) return;
         int range = getRange();
         int rangeY = getRangeY();
-        int posCount = (2 * range + 1) * (2 * range + 1) * (2 * rangeY + 1);
+        int posCount = (2 * range + 1) * (2 * range + 1) * (2 * rangeY + 1) - 1;
         System.out.println(posCount);
         POSITIONS = new BlockPos[posCount];
         ticksRemaining = new int[posCount];
         activePositions = new boolean[posCount];
         int i = 0;
+        BlockPos p = getPos();
         for (BlockPos pos :  BlockPos.getAllInBox(getPos().add(-range, -rangeY, -range), getPos().add(range, rangeY, range))) {
-            if (pos.getX() == 0 && pos.getY() == 0 && pos.getZ() == 0) continue;
+            if (pos.getX() == p.getX() && pos.getY() == p.getY() && pos.getZ() == p.getZ()) continue;
             POSITIONS[i] = pos;
-            ticksRemaining[i] = -1;
+            ticksRemaining[i] = -2;
             activePositions[i] = false;
             i++;
         }
@@ -87,72 +90,56 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     @Override
     public void onUpdate() {
         super.onUpdate();
-
         if (!initialized) {
             init();
             initialized = true;
         }
-
-        if(supertile.getWorld().isRemote || redstoneSignal > 0 || !canOperate())
+        if (redstoneSignal > 0 || !canOperate())
             return;
+
+        int cooldown = nextValidTick - ticksExisted;
 
         int timeCost = getTimeCost();
         int manaCost = getManaCost();
 
-        if (cooldown > 0) {
-            cooldown--;
-        }
-
         if (timeCost > 0) {
-            if (ticksExisted % getDelay() == 0) {
-                updateActivePositions();
+            tickActiveCountdowns();
+            if (ticksExisted % getRangeCheckInterval() == 0) {
+                locateActiveBlocks();
             }
-            if (getWorld().isRemote) {
-                for (int i = 0; i < POSITIONS.length; i++) {
-                    if (activePositions[i]) {
-                        BlockPos coords = POSITIONS[i];
-                        Botania.proxy.sparkleFX(coords.getX() + Math.random(), coords.getY() + Math.random(), coords.getZ() + Math.random(),
-                                ((getColor() >>> 16) & 0xFF)/255F, ((getColor() >>> 8) & 0xFF)/255F, (getColor() & 0xFF)/255F, (float) Math.random(), 5);
-                    }
-                }
+            for (int bpt = Math.min(POSITIONS.length, MAX_BLOCKS_PER_TICK); bpt > 0; bpt --) {
+                positionAt++;
+                if (positionAt >= POSITIONS.length) positionAt = 0;
+                BlockPos pos = POSITIONS[positionAt];
+                World world = supertile.getWorld();
+                if (!world.isAirBlock(pos)) {
+                    IBlockState inputBlock = world.getBlockState(pos);
+                    if (definition.matches(inputBlock)) {
+                        if (ticksRemaining[positionAt] <= -2) {
+                            ticksRemaining[positionAt] = timeCost;
+                        } else if (ticksRemaining[positionAt] <= 0 && mana >= manaCost && cooldown <= 0) {
+                            ticksRemaining[positionAt] = -2;
+                            IBlockState outputBlock = definition.recipes.get(inputBlock).selectBlock(world.rand);
+                            if (!world.isRemote) {
+                                world.setBlockState(pos, outputBlock);
+                                if (Botania.gardenOfGlassLoaded ? definition.blockBreakParticlesGOG : definition.blockBreakParticles) {
 
-                return;
-            }
+                                    supertile.getWorld().playEvent(2001, pos, Block.getStateId(outputBlock));
+                                }
+                            }
+                            world.addBlockEvent(getPos(), supertile.getBlockType(), RECIPE_COMPLETE_EVENT, positionAt);
 
-            positionAt++;
-            if (positionAt == POSITIONS.length) positionAt = 0;
-
-            BlockPos coords = POSITIONS[positionAt];
-            World world = super.getWorld();
-
-            if (!world.isAirBlock(coords)) {
-                IBlockState state = world.getBlockState(coords);
-                if (definition.matches(state)) {
-                    if (ticksRemaining[positionAt] == -2) {
-                        ticksRemaining[positionAt] = getTimeCost();
-                    }
-                    if (ticksRemaining[positionAt] > 0) {
-                        ticksRemaining[positionAt]--;
-                    } else if ((manaCost == 0 || mana >= manaCost) && cooldown <= 0) {
+                            mana -= manaCost;
+                            nextValidTick = ticksExisted + getCooldown();
+                        }
+                    } else {
                         ticksRemaining[positionAt] = -2;
-                        IBlockState output = definition.recipes.get(state).selectBlock(world.rand);
-                        if (!world.isRemote) {
-                            world.setBlockState(coords, output);
-                        }
-                        world.addBlockEvent(getPos(), supertile.getBlockType(), RECIPE_COMPLETE_EVENT, positionAt);
-                        if (Botania.gardenOfGlassLoaded ? definition.blockBreakParticlesGOG : definition.blockBreakParticles) {
-                            supertile.getWorld().playEvent(2001, coords, Block.getStateId(output));
-                        }
-                        mana -= manaCost;
-                        cooldown = getDelay();
                     }
                 } else {
                     ticksRemaining[positionAt] = -2;
                 }
-            } else {
-                ticksRemaining[positionAt] = -2;
             }
-        } else if(manaCost > 0 && mana >= manaCost && ticksExisted % getDelay() == 0 && cooldown <= 0) {
+        } else if (mana >= manaCost && cooldown <= 0 && ticksExisted % getRangeCheckInterval() == 0 && !supertile.getWorld().isRemote) {
             BlockPos coords = getCoordsToPut();
             if(coords != null) {
                 ItemStack stack = getOreToPut(supertile.getWorld().getBlockState(coords));
@@ -167,23 +154,44 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
                     }
 
                     mana -= manaCost;
-                    cooldown = getDelay();
+                    nextValidTick = ticksExisted + getCooldown();
                     sync();
                 }
             }
         }
-
     }
 
-    private void updateActivePositions() {
-        for (int i = 0; i < ticksRemaining.length; i++) {
-            if (ticksRemaining[i] > -1) {
-                if (!activePositions[i])
+    public boolean tickActiveCountdowns() {
+        boolean changed = false;
+        for (int i = 0; i < POSITIONS.length; i++) {
+            if (ticksRemaining[i] > 0) {
+                ticksRemaining[i]--;
+                changed = true;
+
+            }
+            if (ticksRemaining[i] > -2 && getWorld().isRemote) {
+                BlockPos coords = POSITIONS[i];
+                Botania.proxy.sparkleFX(coords.getX() + Math.random(), coords.getY() + Math.random(), coords.getZ() + Math.random(),
+                        ((getColor() >>> 16) & 0xFF) / 255F, ((getColor() >>> 8) & 0xFF) / 255F, (getColor() & 0xFF) / 255F, (float) Math.random(), 5);
+            }
+        }
+        return changed;
+    }
+
+    public boolean locateActiveBlocks() {
+        boolean changed = false;
+        for (int i = 0; i < POSITIONS.length; i++) {
+            if (ticksRemaining[i] > -2) {
+                if (!activePositions[i]) {
+                    changed = true;
                     getWorld().addBlockEvent(getPos(), supertile.getBlockType(), UPDATE_ACTIVE_EVENT, i);
+                }
             } else if (activePositions[i]) {
+                changed = true;
                 getWorld().addBlockEvent(getPos(), supertile.getBlockType(), UPDATE_INACTIVE_EVENT, i);
             }
         }
+        return changed;
     }
 
     @Override
@@ -264,8 +272,8 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
         return Botania.gardenOfGlassLoaded ? definition.timeCostGOG : definition.timeCost;
     }
 
-    public int getDelay() {
-        return Botania.gardenOfGlassLoaded ? definition.delayGOG : definition.delay;
+    public int getCooldown() {
+        return Botania.gardenOfGlassLoaded ? definition.cooldownGOG : definition.cooldown;
     }
 
     public int getRange() {
@@ -274,6 +282,10 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
 
     public int getRangeY() {
         return Botania.gardenOfGlassLoaded ? definition.rangeYGOG : definition.rangeY;
+    }
+
+    public int getRangeCheckInterval() {
+        return Botania.gardenOfGlassLoaded ? definition.rangeCheckIntervalGOG : definition.rangeCheckInterval;
     }
 
     @Override
@@ -293,7 +305,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
 
     @Override
     public int getMaxMana() {
-        return getManaCost();
+        return Botania.gardenOfGlassLoaded ? definition.maxManaGOG : definition.maxMana;
     }
 
     @Override
