@@ -17,12 +17,12 @@
  */
 package com.towboat.morechids.block.subtile;
 
-import com.towboat.morechids.tweaker.BlockOutput;
 import com.towboat.morechids.tweaker.BlockOutputMapping;
 import com.towboat.morechids.tweaker.MorechidDefinition;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
@@ -35,7 +35,6 @@ import vazkii.botania.api.subtile.RadiusDescriptor;
 import vazkii.botania.api.subtile.SubTileFunctional;
 import vazkii.botania.api.subtile.signature.SubTileSignature;
 import vazkii.botania.common.Botania;
-import vazkii.botania.common.core.handler.ConfigHandler;
 import vazkii.botania.common.core.handler.ModSounds;
 
 import java.util.ArrayList;
@@ -54,7 +53,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     private static final int INACTIVE = -2;
 
     private BlockPos[] POSITIONS;
-    private int[] ticksRemaining;
+    private int[] ticksRemaining = new int[0];
     private boolean[] activePositions;
 
     private int positionAt = 0;
@@ -70,7 +69,6 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     }
 
     public void init() {
-        if (getTimeCost() <= 0) return;
         int range = getRange();
         int rangeY = getRangeY();
         int posCount = (2 * range + 1) * (2 * range + 1) * (2 * rangeY + 1) - 1;
@@ -109,7 +107,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
             if (ticksExisted % getRangeCheckInterval() == 0) {
                 locateActiveBlocks();
             }
-            for (int bpt = Math.min(POSITIONS.length, MAX_BLOCKS_PER_TICK); bpt > 0; bpt --) {
+            for (int bpt = Math.min(POSITIONS.length, MAX_BLOCKS_PER_TICK); bpt > 0; bpt--) {
 
                 positionAt = (positionAt + 1) % POSITIONS.length;
 
@@ -260,7 +258,21 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
         return possibleCoords.get(supertile.getWorld().rand.nextInt(possibleCoords.size()));
     }
 
+    @Override
+    public void readFromPacketNBT(NBTTagCompound cmp) {
+        positionAt = cmp.getInteger(TAG_POSITION);
 
+        if(supertile.getWorld() != null && !supertile.getWorld().isRemote)
+            for(int i = 0; i < ticksRemaining.length; i++)
+                ticksRemaining[i] = cmp.getInteger(TAG_TICKS_REMAINING + i);
+    }
+
+    @Override
+    public void writeToPacketNBT(NBTTagCompound cmp) {
+        cmp.setInteger(TAG_POSITION, positionAt);
+        for(int i = 0; i < ticksRemaining.length; i++)
+            cmp.setInteger(TAG_TICKS_REMAINING + i, ticksRemaining[i]);
+    }
 
     public boolean canOperate() {
         return true;

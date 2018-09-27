@@ -16,7 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-@Mod(modid = Morechids.MODID, name = Morechids.NAME, version = Morechids.VERSION, dependencies="required-after:crafttweaker;required-after:botania;required-after:mtlib;")
+@Mod(modid = Morechids.MODID, name = Morechids.NAME, version = Morechids.VERSION, dependencies="required-after:crafttweaker;required-after:botania;required-after:mtlib;required-before:resourceloader")
 public class Morechids {
     public static final String MODID = "morechids";
     public static final String NAME = "Morechids";
