@@ -24,25 +24,19 @@ Default files will be generated at `resources/morechids/blockstates/<FLOWER_NAME
 
 ## Configuring Your Morechids
 
-Each Morechid you create can have each parameter individually configured. Morechids can be configured to cost mana like an Orechid, time like a Pure Daisy, or some combination of the two. Any parameter can be configured to act differently in a Garden Of Glass world simply by appending "GOG" to the end of the parameter name. If not explicitly specified, all "GOG" parameters will default to the same value as the corresponding non-"GOG" parameter.
+Each Morechid you create can have each parameter individually configured. Morechids can be configured to cost mana like an Orechid, time like a Pure Daisy, or some combination of the two. Any parameter can be configured to act differently in a Garden Of Glass world simply by appending "GOG" to the end of the parameter name. *If not explicitly specified, all "GOG" parameters will default to the same value as the corresponding non-"GOG" parameter.*
 
 **Example configuration for mimicking Botania's Orechid behavior:** (minus the recipes)
 *(Note: recipes must be configured separately through CraftTweaker)*
 ```json
 {
     "orechid_clone": {
-        "manaCost": 17500,
         "manaCostGOG": 700,
-        "timeCost": 0,
-        "cooldown": 100,
         "cooldownGOG": 2,
-        "color": "818181",
-        "range": 5,
-        "rangeY": 3,
-        "playSound": true
     }
 }
 ```
+The default values for a flower are already set up to act like a non-GoG Orechid. As "GOG" parameters default to the non-"GOG" values if not specified, those are the only values we have to configure.
 
 **Example configuration for mimicking Botania's Pure Daisy behavior:**
 *(Note: recipes must be configured separately through CraftTweaker)*
@@ -59,11 +53,13 @@ Each Morechid you create can have each parameter individually configured. Morech
     }
 }
 ```
+The Pure Daisy costs time instead of mana, has a smaller range, and doesn't play a sound. We also set its color to white. Note that because the Pure Daisy does not behave differently in a GoG world (besides actual recipes), we don't need to set any "GOG" parameters.
 
 ### Configurable Parameters:
 
 * `manaCost` / `manaCostGOG`: ***Integer*** [0 ~ ∞] *(default: 17500)*
   * The amount of mana required to perform a conversion.
+  * For reference, 1 charcoal in an endoflame produces 1200 mana over 40 seconds. 17500 is the default Orechid cost in Botania (700 in a Garden Of Glass world). 
 
 * `timeCost` / `timeCostGOG`: ***Integer*** [0 ~ ∞] *(default: 0)*
   * The number of ticks a block must remain in the flower's range in order to be converted.
@@ -92,7 +88,7 @@ Each Morechid you create can have each parameter individually configured. Morech
 * `playSound` / `playSoundGOG`: ***Boolean*** *(default: true)*
   * If true, the Orechid **BANG!** sound will play when a block is converted.
 
-* `rangeCheckInterval` / `rangeCheckIntervalGOG`: ***Integer*** [1 ~ `cooldown`] *(default: `cooldown`)*
+* `rangeCheckInterval` / `rangeCheckIntervalGOG`: ***Integer*** [1 ~ `cooldown`] *(default: 1)*
   * The number of ticks to wait between checks for newly placed blocks.
   * **This number can cause performance issues.** See the **Performance Concerns** section for more details.
 
@@ -100,11 +96,13 @@ Each Morechid you create can have each parameter individually configured. Morech
   * If true, block breaking particles will appear when a block is converted.
 
 ### Performance Concerns and Behavior Oddities
-In order to locate blocks to convert, flowers must search the surrounding area for valid candidates. This requires checking every block within the flower's range, meaning a volume of `(2*range + 1)^2 + 2*rangeY` blocks. For a flower with `range` of 5 and `rangeY` of 3 (like the *default* Orechid), this would mean ***127 blocks every tick***.
+In order to locate blocks to convert, flowers must search the surrounding area for valid candidates. This requires checking every block within the flower's range, meaning a volume of `(2*range + 1)^2 * (2*rangeY + 1) - 1` blocks. For a flower with `range` of 5 and `rangeY` of 3 (like the *default* Orechid), this would mean ***846 blocks every tick***. Keep this in mind when setting the range of your flower.
 
 Setting the `rangeCheckInterval` value to 20, for example, would allow this check to occur once every second, rather than once every tick. There are a few optimizations in the code to prevent this check from occurring when it is not necessary (such as if a flower has less mana than its `manaCost`), but for the most part please keep this in mind when selecting a flower range.
 
-The `rangeCheckInterval` value *will* have a noticeable effect on the flower's behavior, in that it will potentially cause some variation in the effective `cooldown` value for a flower. If a block is placed in the tick right after the range check last occurred, it will not be detected until the next range check occurs. Because of this, for a flower with a `timeCost` less than its `rangeCheckInterval`, it will not detect the block until the next range check occurs *regardless of whether the `cooldown` is ready or not*.
+The `rangeCheckInterval` value *will* have an effect on the flower's behavior, in that it will potentially cause some variation in the effective `cooldown` value for a flower. If a block is placed in the tick right after the range check last occurred, it will not be detected until the next range check occurs. Because of this, for a flower with a `timeCost` less than its `rangeCheckInterval`, it will not detect the block until the next range check occurs.
+
+There will be a better explanation here eventually, but hopefully this gets the idea across.
 
 # Adding Recipes
 Adding recipes to a Morechid is very straight forward and simply requires the use of a **CraftTweaker** script.
