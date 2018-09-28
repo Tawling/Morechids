@@ -1,10 +1,6 @@
 # Morechids
 Unlimited customizable Orechid variants for botanical progression
 
-
-# The following documentation does not reflect the existing functionality of the mod. It is my projection of the future functionality that I am working on implementing. Hopefully it'll be a reality soon. Don't get too excited.
-
-
 # Flower Creation
 
 ## Defining Flowers
@@ -22,7 +18,9 @@ For example, the following JSON structure would create two flowers with unique n
 ```
 
 ### Supplying Textures and Resources
-Each custom flower can have external resources provided just like any other block. The resource path is based on the unique name you use to define your flower. For the example above, the resource paths for the two flowers would be `morechids:myflower` and `morechids:my_second_flower`. Resources can be provided with a resource pack or using a mod such as **ResourceLoader**.
+Each custom flower can have external resources provided just like any other block. The resource path is based on the unique name you use to define your flower. For the example above, the resource paths for the two flowers would be `morechids:myflower` and `morechids:my_second_flower`. Flowers are defined as "blockstate" resources rather than blocks.
+
+Default files will be generated at `resources/morechids/blockstates/<FLOWER_NAME>.json` and `resources/morechids/textures/<FLOWER_NAME>.png` for any Morechid names that don't have the appropriate files. You will need to define a localization string for `morechids:<FLOWER_NAME>.name` and if you want flavor text on the tooltip you can also specify a string for `morechids:<FLOWER_NAME>.reference` in your `.lang` file.
 
 ## Configuring Your Morechids
 
@@ -87,9 +85,9 @@ Each Morechid you create can have each parameter individually configured. Morech
   * The maximum amount of mana that can be stored in this flower's buffer. A number larger than `manaCost` may allow for multiple blocks to be converted before the flower runs out of mana.
   * If `manaCost` is 0, this value will be ignored.
 
-* `particleColor` / `particleColorGOG`: ***String*** *(default: randomized by flower name)*
-  * A hex value as a string (ex: "FF0000") representing the color of sparkles coming off the flower when active, and the default flower color if no other resource is provided.
-  * If not specified, a random color will be selected. This color is guaranteed to be consistent for any given flower name.
+* `particleColor` / `particleColorGOG`: ***String*** *(default: "818181")*
+  * A hex value as a string (ex: "FF0000") representing the color of sparkles coming off the flower when active.
+  * If timeCost is greater than 0, this will also control the color of the sparkles coming off blocks which are in the process of being converted.
 
 * `playSound` / `playSoundGOG`: ***Boolean*** *(default: true)*
   * If true, the Orechid **BANG!** sound will play when a block is converted.
