@@ -3,7 +3,10 @@ package com.towboat.morechids.tweaker;
 import com.blamejared.mtlib.helpers.InputHelper;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.item.IIngredient;
+import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.liquid.ILiquidStack;
+import crafttweaker.api.oredict.IOreDictEntry;
+import crafttweaker.mc1120.oredict.MCOreDictEntry;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
@@ -21,12 +24,26 @@ import java.util.HashMap;
 public class MorechidDefinition {
     public String identifier;
     public int manaCost = 17500;
+    public int maxMana = 17500;
     public int timeCost = 0;
-    public int delay = 100;
+    public int cooldown = 100;
     public int range = 5;
     public int rangeY = 3;
     public int particleColor = 0x818181;
     public boolean playSound = true;
+    public boolean blockBreakParticles = true;
+    public int rangeCheckInterval = 1;
+
+    public int manaCostGOG = 17500;
+    public int maxManaGOG = 17500;
+    public int timeCostGOG = 0;
+    public int cooldownGOG = 100;
+    public int rangeGOG = 5;
+    public int rangeYGOG = 3;
+    public int particleColorGOG = 0x818181;
+    public boolean playSoundGOG = true;
+    public boolean blockBreakParticlesGOG = true;
+    public int rangeCheckIntervalGOG = 1;
 
     public HashMap<Object, BlockOutputMapping> recipes = new HashMap<>();
 
@@ -55,7 +72,6 @@ public class MorechidDefinition {
 
     @ZenMethod
     public void addRecipe(IIngredient input, IIngredient output, double weight) {
-
         if (input == null || output == null) {
             return;
         }
@@ -105,13 +121,53 @@ public class MorechidDefinition {
         }
     }
 
+    @ZenMethod
+    public void removeOutput(IIngredient block) {
+        IBlockState state = convertToBlocks(block)[0];
+        for (BlockOutputMapping mapping : recipes.values()) {
+            for (BlockOutput bo : mapping) {
+                bo.remove(state);
+                if (bo.isEmpty())
+                    mapping.remove(bo);
+            }
+            if (mapping.isEmpty()) {
+                recipes.remove(state);
+            }
+        }
+    }
+
+    @ZenMethod
+    public void removeInput(IIngredient block) {
+        IBlockState state = convertToBlocks(block)[0];
+        recipes.remove(state);
+        recipes.remove(state.getBlock());
+    }
+
     private IBlockState[] convertToBlocks(IIngredient input) {
 
         Object obj = InputHelper.toObject(input);
-        if (!(input instanceof ILiquidStack)) {
+
+        System.out.println(input.getClass());
+        if (!(input instanceof ILiquidStack || input instanceof MCOreDictEntry)) {
             if (obj == null || (obj instanceof ItemStack && !InputHelper.isABlock((ItemStack) obj))) {
                 return new IBlockState[0];
             }
+        }
+
+        if (input instanceof MCOreDictEntry) {
+            ItemStack[] stacks = InputHelper.toStacks(input.getItemArray());
+            System.out.print("Total blocks in ItemStack[]: ");
+            System.out.println(stacks.length);
+            if (stacks.length == 0) return new IBlockState[0];
+            IBlockState[] res = new IBlockState[stacks.length];
+            for (int i = 0; i < stacks.length; i++) {
+                ItemStack stack = stacks[i];
+                res[i] = Block.getBlockFromItem(stack.getItem()).getStateFromMeta(stack.getMetadata());
+                System.out.println(res[i]);
+            }
+            System.out.print("Total blocks in oredict: ");
+            System.out.println(res.length);
+            return res;
         }
 
         if (obj instanceof ItemStack) {
