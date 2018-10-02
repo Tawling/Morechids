@@ -40,6 +40,8 @@ public class MorechidRegistry {
 
         def.setMorechidClass(flowerClass);
 
+        ResourceInitializer.initializeResource(identifier);
+
         BotaniaAPI.registerSubTile(def.getIdentifier(), flowerClass);
         BotaniaAPI.addSubTileToCreativeMenu(def.getIdentifier());
 
@@ -49,9 +51,6 @@ public class MorechidRegistry {
         }catch(Exception e){
 
         }
-
-        ResourceInitializer.initializeResource(identifier);
-
         return def;
     }
 
@@ -66,6 +65,8 @@ public class MorechidRegistry {
 }
 
 class ResourceInitializer {
+
+    public static final String[] DEFAULT_IMAGES = new String[]{"crystal_fire.png", "crystal_ice.png", "crystal_life.png", "crystal_magic.png", "crystal_water.png", "plumbell.png", "stone_blossom.png"};
     public static void initializeResource(String identifier) {
         identifier = identifier.toLowerCase();
         File folder = new File(Morechids.proxy.getDataDirectory(), "resources");
@@ -111,11 +112,13 @@ class ResourceInitializer {
                 w.close();
 
                 File png = new File(textures, identifier + ".png");
+                String imageName = DEFAULT_IMAGES[Math.abs(identifier.hashCode()) % DEFAULT_IMAGES.length];
+
                 if (!png.exists()) {
                     InputStream is = null;
                     OutputStream os = null;
                     try {
-                        is = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation("morechids", "orechid.png")).getInputStream();
+                        is = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation("morechiddefaults", imageName)).getInputStream();
                         os = new FileOutputStream(png);
                         byte[] buffer = new byte[1024];
                         int length;
