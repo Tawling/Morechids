@@ -20,7 +20,7 @@ For example, the following JSON structure would create two flowers with unique n
 ### Supplying Textures and Resources
 Each custom flower can have external resources provided just like any other block. The resource path is based on the unique name you use to define your flower. For the example above, the resource paths for the two flowers would be `morechids:myflower` and `morechids:my_second_flower`. Flowers are defined as "blockstate" resources rather than blocks.
 
-Default files will be generated at `resources/morechids/blockstates/<FLOWER_NAME>.json` and `resources/morechids/textures/<FLOWER_NAME>.png` for any Morechid names that don't have the appropriate files. You will need to define a localization string for `morechids:<FLOWER_NAME>.name` and if you want flavor text on the tooltip you can also specify a string for `morechids:<FLOWER_NAME>.reference` in your `.lang` file.
+Default files will be generated at `resources/morechids/blockstates/<FLOWER_NAME>.json` and `resources/morechids/textures/<FLOWER_NAME>.png` for any Morechid names that don't have the appropriate files. You will need to define a localization string for `morechids:<FLOWER_NAME>.name`, `morechids.nei.<FLOWER_NAME>`, and optionally, if you want flavor text on the tooltip, `morechids:<FLOWER_NAME>.reference` in your `.lang` file.
 
 ## Configuring Your Morechids
 

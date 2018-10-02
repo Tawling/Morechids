@@ -84,6 +84,7 @@ class ResourceInitializer {
         File textures = new File(main,"textures");
         if (!textures.exists()) {
             textures.mkdirs();
+            // TODO: add folder for default image files
         }
 
         File json = new File(blockstates, identifier + ".json");
