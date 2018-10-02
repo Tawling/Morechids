@@ -2,7 +2,6 @@ package com.towboat.morechids;
 
 import com.towboat.morechids.config.ConfigHandler;
 import com.towboat.morechids.proxy.CommonProxy;
-import com.towboat.morechids.tweaker.MorechidRecipe;
 import com.towboat.morechids.tweaker.MorechidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -12,8 +11,6 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 @Mod(modid = Morechids.MODID, name = Morechids.NAME, version = Morechids.VERSION, dependencies="required-after:crafttweaker;required-after:botania;required-after:mtlib;required-before:resourceloader")
 public class Morechids {

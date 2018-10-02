@@ -1,6 +1,9 @@
-
-
 /**
+ * This class was adapted from vazkii.botania.client.integration.jei.puredaisy.PureDaisyRecipeWrapper
+ * Modifications were made by Taw
+ * Original header included below
+ * ***
+ *
  * This class was created by <williewillus>. It's distributed as
  * part of the Botania Mod. Get the Source Code in github:
  * https://github.com/Vazkii/Botania
@@ -12,7 +15,6 @@
 package com.towboat.morechids.integration.jei;
 
 import com.google.common.collect.ImmutableList;
-import com.towboat.morechids.tweaker.MorechidDefinition;
 import com.towboat.morechids.tweaker.MorechidRecipe;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.recipe.IRecipeWrapper;
@@ -21,10 +23,8 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.oredict.OreDictionary;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 

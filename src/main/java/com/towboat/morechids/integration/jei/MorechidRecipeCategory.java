@@ -1,4 +1,9 @@
 /**
+ * This class was adapted from vazkii.botania.client.integration.jei.puredaisy.PureDaisyRecipeCategory
+ * Modifications were made by Taw
+ * Original header included below
+ * ***
+ *
  * This class was created by <williewillus>. It's distributed as
  * part of the Botania Mod. Get the Source Code in github:
  * https://github.com/Vazkii/Botania
@@ -23,13 +28,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidStack;
 import vazkii.botania.common.item.block.ItemBlockSpecialFlower;
-import vazkii.botania.common.lib.LibBlockNames;
-import vazkii.botania.common.lib.LibMisc;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MorechidRecipeCategory implements IRecipeCategory {
 

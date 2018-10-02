@@ -6,6 +6,7 @@ import com.towboat.morechids.block.subtile.CustomOrechidSubtile;
 import crafttweaker.annotations.ZenRegister;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.util.ResourceLocation;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 import vazkii.botania.api.BotaniaAPI;
@@ -114,14 +115,14 @@ class ResourceInitializer {
                     InputStream is = null;
                     OutputStream os = null;
                     try {
-                        is = Morechids.class.getResourceAsStream("images/orechid.png");
+                        is = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation("morechids", "orechid.png")).getInputStream();
                         os = new FileOutputStream(png);
                         byte[] buffer = new byte[1024];
                         int length;
                         while ((length = is.read(buffer)) > 0) {
                             os.write(buffer, 0, length);
                         }
-                    }finally {
+                    } finally {
                         is.close();
                         os.close();
                     }

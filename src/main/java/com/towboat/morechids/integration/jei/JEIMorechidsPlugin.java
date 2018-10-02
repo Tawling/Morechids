@@ -1,7 +1,5 @@
 package com.towboat.morechids.integration.jei;
 
-import com.towboat.morechids.tweaker.MorechidDefinition;
-import com.towboat.morechids.tweaker.MorechidRecipe;
 import com.towboat.morechids.tweaker.MorechidRegistry;
 import mezz.jei.api.*;
 import mezz.jei.api.recipe.IRecipeCategoryRegistration;
@@ -11,21 +9,13 @@ import vazkii.botania.common.item.block.ItemBlockSpecialFlower;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * JEIMorechidsPlugin.java
- * <p>
- * Author:  Taw
- * Date:    9/30/2018
- */
 @JEIPlugin
 public class JEIMorechidsPlugin implements IModPlugin {
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registry) {
-        //TODO: for each defined Morechid, add as a category
         MorechidRegistry.morechids.forEach((s, def) -> {
              registry.addRecipeCategories(new MorechidRecipeCategory(registry.getJeiHelpers().getGuiHelper(), def));
         });
