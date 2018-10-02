@@ -6,12 +6,12 @@ import java.util.ArrayList;
 import java.util.Random;
 
 /**
- * BlockOutputMapping.java
+ * RecipeEntry.java
  * <p>
  * Author:  Taw
  * Date:    9/21/2018
  */
-public class BlockOutputMapping extends ArrayList<BlockOutput> {
+public class RecipeEntry extends ArrayList<BlockOutput> {
     public double totalWeight;
 
     @Override

@@ -17,8 +17,8 @@
  */
 package com.towboat.morechids.block.subtile;
 
-import com.towboat.morechids.tweaker.BlockOutputMapping;
 import com.towboat.morechids.tweaker.MorechidDefinition;
+import com.towboat.morechids.tweaker.MorechidRecipe;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
@@ -225,7 +225,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     }
 
     public ItemStack getOreToPut(IBlockState block) {
-        BlockOutputMapping mapping = definition.recipes.get(block);
+        MorechidRecipe mapping = definition.recipes.get(block);
         if (mapping == null) {
             mapping = definition.recipes.get(block.getBlock());
             if (mapping == null) {
@@ -349,9 +349,6 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
     @SideOnly(Side.CLIENT)
     @Override
     public void addTooltip(ItemStack stack, World world, List<String> tooltip) {
-        if(getManaCost() <= 0)
-            tooltip.add(TextFormatting.BLUE + I18n.translateToLocal("botania.flowerType.special"));
-        else
-            tooltip.add(TextFormatting.BLUE + I18n.translateToLocal("botania.flowerType.functional"));
+        tooltip.add(TextFormatting.BLUE + I18n.translateToLocal("botania.flowerType.functional"));
     }
 }

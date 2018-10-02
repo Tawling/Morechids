@@ -2,9 +2,7 @@ package com.towboat.morechids;
 
 import com.towboat.morechids.config.ConfigHandler;
 import com.towboat.morechids.proxy.CommonProxy;
-import com.towboat.morechids.tweaker.BlockOutput;
-import com.towboat.morechids.tweaker.BlockOutputMapping;
-import com.towboat.morechids.tweaker.MorechidDefinition;
+import com.towboat.morechids.tweaker.MorechidRecipe;
 import com.towboat.morechids.tweaker.MorechidRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -15,12 +13,13 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 @Mod(modid = Morechids.MODID, name = Morechids.NAME, version = Morechids.VERSION, dependencies="required-after:crafttweaker;required-after:botania;required-after:mtlib;required-before:resourceloader")
 public class Morechids {
     public static final String MODID = "morechids";
     public static final String NAME = "Morechids";
-    public static final String VERSION = "1.0.1";
+    public static final String VERSION = "1.1.0";
 
     @Mod.Instance(MODID)
     public static Morechids instance;
@@ -49,23 +48,9 @@ public class Morechids {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
-        // prune empty recipes and mappings.
-        MorechidRegistry.morechids.forEach((identifier, def) -> {
-            ArrayList<Object> removals = new ArrayList<>();
-            def.recipes.forEach((state, outputs) -> {
-                if (outputs.isEmpty()) {
-                    removals.add(state);
-                } else {
-                    for (int i = outputs.size()-1; i >= 0; i--) {
-                        if (outputs.get(i).isEmpty()) {
-                            outputs.remove(i);
-                        }
-                    }
-                }
-            });
-            for (Object o: removals) {
-                def.recipes.remove(o);
-            }
+        // Flatten RecipeEntries to MorechidRecipes
+        MorechidRegistry.morechids.forEach((s, def) -> {
+            def.flattenRecipes();
         });
     }
 

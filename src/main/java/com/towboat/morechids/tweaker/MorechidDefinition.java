@@ -3,19 +3,14 @@ package com.towboat.morechids.tweaker;
 import com.blamejared.mtlib.helpers.InputHelper;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.item.IIngredient;
-import crafttweaker.api.item.IItemStack;
 import crafttweaker.api.liquid.ILiquidStack;
-import crafttweaker.api.oredict.IOreDictEntry;
 import crafttweaker.mc1120.oredict.MCOreDictEntry;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenGetter;
 import stanhebben.zenscript.annotations.ZenMethod;
-import vazkii.botania.api.subtile.SubTileEntity;
 
 import java.util.HashMap;
 
@@ -45,7 +40,8 @@ public class MorechidDefinition {
     public boolean blockBreakParticlesGOG = true;
     public int rangeCheckIntervalGOG = 1;
 
-    public HashMap<Object, BlockOutputMapping> recipes = new HashMap<>();
+    public HashMap<Object, RecipeEntry> recipeEntries = new HashMap<>();
+    public HashMap<Object, MorechidRecipe> recipes;
 
     public Class morechidClass;
 
@@ -80,9 +76,9 @@ public class MorechidDefinition {
         IBlockState[] outputBlocks = convertToBlocks(output);
 
         for (IBlockState block : inputBlocks) {
-            BlockOutputMapping mapping = recipes.get(block);
+            RecipeEntry mapping = recipeEntries.get(block);
             if (mapping == null) {
-                mapping = new BlockOutputMapping();
+                mapping = new RecipeEntry();
             }
 
             //TODO: Check for duplicate sets?
@@ -93,7 +89,7 @@ public class MorechidDefinition {
             }
             bo.weight = weight;
             mapping.add(bo);
-            recipes.put(block, mapping);
+            recipeEntries.put(block, mapping);
         }
     }
 
@@ -102,7 +98,7 @@ public class MorechidDefinition {
         IBlockState[] inputBlocks = convertToBlocks(input);
         IBlockState[] outputBlocks = convertToBlocks(output);
         for (IBlockState block : inputBlocks) {
-            BlockOutputMapping mapping = recipes.get(block);
+            RecipeEntry mapping = recipeEntries.get(block);
             if (mapping == null) {
                 continue;
             }
@@ -116,7 +112,7 @@ public class MorechidDefinition {
                 }
             }
             if (mapping.isEmpty()) {
-                recipes.remove(block);
+                recipeEntries.remove(block);
             }
         }
     }
@@ -124,14 +120,14 @@ public class MorechidDefinition {
     @ZenMethod
     public void removeOutput(IIngredient block) {
         IBlockState state = convertToBlocks(block)[0];
-        for (BlockOutputMapping mapping : recipes.values()) {
+        for (RecipeEntry mapping : recipeEntries.values()) {
             for (BlockOutput bo : mapping) {
                 bo.remove(state);
                 if (bo.isEmpty())
                     mapping.remove(bo);
             }
             if (mapping.isEmpty()) {
-                recipes.remove(state);
+                recipeEntries.remove(state);
             }
         }
     }
@@ -139,8 +135,25 @@ public class MorechidDefinition {
     @ZenMethod
     public void removeInput(IIngredient block) {
         IBlockState state = convertToBlocks(block)[0];
-        recipes.remove(state);
-        recipes.remove(state.getBlock());
+        recipeEntries.remove(state);
+        recipeEntries.remove(state.getBlock());
+    }
+
+    public void flattenRecipes() {
+        if (recipeEntries == null) return;
+        recipes = new HashMap<>();
+        recipeEntries.forEach((input, entry) -> {
+            MorechidRecipe recipe = new MorechidRecipe(input);
+            entry.forEach((outputSet) -> {
+                outputSet.forEach((block) -> {
+                    double weight = recipe.containsKey(block) ? recipe.get(block) : 0;
+                    weight += outputSet.weight / outputSet.size();
+                    recipe.put(block, weight);
+                });
+            });
+            recipes.put(input, recipe);
+        });
+        recipeEntries = null;
     }
 
     private IBlockState[] convertToBlocks(IIngredient input) {
