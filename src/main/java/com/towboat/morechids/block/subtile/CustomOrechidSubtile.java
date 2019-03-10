@@ -260,6 +260,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
 
     @Override
     public void readFromPacketNBT(NBTTagCompound cmp) {
+        super.readFromPacketNBT(cmp);
         positionAt = cmp.getInteger(TAG_POSITION);
 
         if(supertile.getWorld() != null && !supertile.getWorld().isRemote)
@@ -269,6 +270,7 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
 
     @Override
     public void writeToPacketNBT(NBTTagCompound cmp) {
+        super.writeToPacketNBT(cmp);
         cmp.setInteger(TAG_POSITION, positionAt);
         for(int i = 0; i < ticksRemaining.length; i++)
             cmp.setInteger(TAG_TICKS_REMAINING + i, ticksRemaining[i]);
