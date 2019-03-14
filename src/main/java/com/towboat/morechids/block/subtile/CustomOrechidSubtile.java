@@ -20,7 +20,9 @@ package com.towboat.morechids.block.subtile;
 import com.towboat.morechids.tweaker.MorechidDefinition;
 import com.towboat.morechids.tweaker.MorechidRecipe;
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.SoundCategory;
@@ -145,13 +147,12 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
         } else if (mana >= manaCost && readyToConvert && ticksExisted % getRangeCheckInterval() == 0 && !supertile.getWorld().isRemote) {
             BlockPos coords = getCoordsToPut();
             if(coords != null) {
-                ItemStack stack = getOreToPut(supertile.getWorld().getBlockState(coords));
-                if(!stack.isEmpty()) {
-                    Block block = Block.getBlockFromItem(stack.getItem());
-                    int meta = stack.getItemDamage();
-                    supertile.getWorld().setBlockState(coords, block.getStateFromMeta(meta), 1 | 2);
+                IBlockState state = getOreToPut(supertile.getWorld().getBlockState(coords));
+                if(state.getMaterial() != Material.AIR) {
+                    Block b = state.getBlock();
+                    supertile.getWorld().setBlockState(coords, state, 1 | 2);
                     if(Botania.gardenOfGlassLoaded ? definition.blockBreakParticlesGOG : definition.blockBreakParticles)
-                        supertile.getWorld().playEvent(2001, coords, Block.getIdFromBlock(block) + (meta << 12));
+                        supertile.getWorld().playEvent(2001, coords, Block.getIdFromBlock(state.getBlock()) + (b.getMetaFromState(state) << 12));
                     if (Botania.gardenOfGlassLoaded ? definition.playSoundGOG : definition.playSound) {
                         supertile.getWorld().playSound(null, supertile.getPos(), ModSounds.orechid, SoundCategory.BLOCKS, 2F, 1F);
                     }
@@ -224,24 +225,24 @@ public class CustomOrechidSubtile extends SubTileFunctional implements SubTileSi
         }
     }
 
-    public ItemStack getOreToPut(IBlockState block) {
+    public IBlockState getOreToPut(IBlockState block) {
         MorechidRecipe mapping = definition.recipes.get(block);
         if (mapping == null) {
             mapping = definition.recipes.get(block.getBlock());
             if (mapping == null) {
-                return ItemStack.EMPTY;
+                return Blocks.AIR.getDefaultState();
             }
         }
 
         IBlockState state = mapping.selectBlock(supertile.getWorld().rand);
         if (state == null) {
-            return ItemStack.EMPTY;
+            return Blocks.AIR.getDefaultState();
         }
         Block b = state.getBlock();
         if (b == null) {
-            return ItemStack.EMPTY;
+            return Blocks.AIR.getDefaultState();
         }
-        return new ItemStack(state.getBlock());
+        return state;
     }
 
     private BlockPos getCoordsToPut() {
