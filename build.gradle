@@ -37,6 +37,14 @@ repositories {
     maven {
         url "http://maven.blamejared.com"
     }
+    maven {
+        // location of the maven that hosts JEI files
+        name = "Progwml6 maven"
+        url = "http://dvs1.progwml6.com/files/maven"
+    }
+    maven  {
+        url = "http://maven.thiakil.com"
+    }
 }
 
 dependencies {
@@ -64,6 +72,14 @@ dependencies {
     compile 'org.ow2.asm:asm-debug-all:5.2'
 
     deobfCompile "CraftTweaker2:CraftTweaker2-MC1120-Main:1.12-4.1.9.486"
+    deobfCompile "vazkii.botania:Botania:r1.10-361.60"
+    deobfCompile "com.azanor.baubles:Baubles:1.12-1.5.2"
+    deobfCompile "com.blamejared:MTLib:3.0.4.8"
+
+    // compile against the JEI API but do not include it at runtime
+    deobfProvided "mezz.jei:jei_${mc_version}:${jei_version}:api"
+    // at runtime, use the full JEI jar
+    runtime "mezz.jei:jei_${mc_version}:${jei_version}"
 
 }
 

@@ -7,6 +7,8 @@ import crafttweaker.annotations.ZenRegister;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.Side;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
 import vazkii.botania.api.BotaniaAPI;
@@ -45,7 +47,9 @@ public class MorechidRegistry {
         BotaniaAPI.registerSubTile(def.getIdentifier(), flowerClass);
         BotaniaAPI.addSubTileToCreativeMenu(def.getIdentifier());
 
-        BotaniaAPIClient.registerSubtileModel(flowerClass, new ModelResourceLocation("morechids:" + identifier));
+
+        if(FMLCommonHandler.instance().getSide() == Side.CLIENT)
+            BotaniaAPIClient.registerSubtileModel(flowerClass, new ModelResourceLocation("morechids:" + identifier));
         try {
             BotaniaAPI.registerSubTileSignature(flowerClass, flowerClass.newInstance());
         }catch(Exception e){

@@ -4,16 +4,18 @@ import com.towboat.morechids.config.ConfigHandler;
 import com.towboat.morechids.proxy.CommonProxy;
 import com.towboat.morechids.tweaker.MorechidRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.relauncher.Side;
 
 import java.io.File;
 import java.io.IOException;
 
-@Mod(modid = Morechids.MODID, name = Morechids.NAME, version = Morechids.VERSION, dependencies="required-after:crafttweaker;required-after:botania;required-after:mtlib;required-before:resourceloader")
+@Mod(modid = Morechids.MODID, name = Morechids.NAME, version = Morechids.VERSION, dependencies="required-after:crafttweaker;required-after:botania;required-after:mtlib;required-before-client:resourceloader")
 public class Morechids {
     public static final String MODID = "morechids";
     public static final String NAME = "Morechids";
@@ -42,7 +44,8 @@ public class Morechids {
                 System.out.println("An error occured when creating config file for morechids");
             }
         }
-        Minecraft.getMinecraft().refreshResources();
+        if(FMLCommonHandler.instance().getSide() == Side.CLIENT)
+            Minecraft.getMinecraft().refreshResources();
     }
 
     @Mod.EventHandler
